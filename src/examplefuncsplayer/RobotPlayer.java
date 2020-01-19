@@ -43,13 +43,13 @@ public strictfp class RobotPlayer {
                 switch (rc.getType()) {
                     case HQ:                 runHQ();                break;
                     case MINER:              runMiner();             break;
-                    case REFINERY:           runRefinery();          break;
-                    case VAPORATOR:          runVaporator();         break;
-                    case DESIGN_SCHOOL:      runDesignSchool();      break;
-                    case FULFILLMENT_CENTER: runFulfillmentCenter(); break;
-                    case LANDSCAPER:         runLandscaper();        break;
-                    case DELIVERY_DRONE:     runDeliveryDrone();     break;
-                    case NET_GUN:            runNetGun();            break;
+//                    case REFINERY:           runRefinery();          break;
+//                    case VAPORATOR:          runVaporator();         break;
+//                    case DESIGN_SCHOOL:      runDesignSchool();      break;
+//                    case FULFILLMENT_CENTER: runFulfillmentCenter(); break;
+//                    case LANDSCAPER:         runLandscaper();        break;
+//                    case DELIVERY_DRONE:     runDeliveryDrone();     break;
+//                    case NET_GUN:            runNetGun();            break;
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
@@ -64,17 +64,20 @@ public strictfp class RobotPlayer {
 
     static void runHQ() throws GameActionException {
         for (Direction dir : directions)
+            //Building miners in all directions around HQ
             tryBuild(RobotType.MINER, dir);
+
     }
 
     static void runMiner() throws GameActionException {
         tryBlockchain();
-        tryMove(randomDirection());
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+        Direction rd=randomDirection();
+        boolean trymovesuccess=tryMove(rd);
+        if (trymovesuccess)
+            System.out.println("Robot moved "+rd.toString());
         // tryBuild(randomSpawnedByMiner(), randomDirection());
-        for (Direction dir : directions)
-            tryBuild(RobotType.FULFILLMENT_CENTER, dir);
+//        for (Direction dir : directions)
+//            tryBuild(RobotType.FULFILLMENT_CENTER, dir);
         for (Direction dir : directions)
             if (tryRefine(dir))
                 System.out.println("I refined soup! " + rc.getTeamSoup());
