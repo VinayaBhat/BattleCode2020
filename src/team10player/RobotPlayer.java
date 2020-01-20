@@ -1,26 +1,25 @@
-package examplefuncsplayer;
+package team10player;
 import battlecode.common.*;
+import com.sun.org.apache.regexp.internal.recompile;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
 
     static Direction[] directions = {
-        Direction.NORTH,
-        Direction.NORTHEAST,
-        Direction.EAST,
-        Direction.SOUTHEAST,
-        Direction.SOUTH,
-        Direction.SOUTHWEST,
-        Direction.WEST,
-        Direction.NORTHWEST
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST
     };
     static RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
     static int turnCount;
     static MapLocation HQLocation;
-    static MapLocation RefineryLocation;
-    static int numberofrefinerybuilt=0;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -35,14 +34,15 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
-        System.out.println("I'm a " + rc.getType() + " and I just got created!");
+        // System.out.println("I'm a " + rc.getType() + " and I just got created!");
+
         while (true) {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 // Here, we've separated the controls into a different method for each RobotType.
                 // You can add the missing ones or rewrite this into your own control structure.
-                System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
+                // System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
                     case HQ:                 runHQ();                break;
                     case MINER:              runMiner();             break;
@@ -72,51 +72,52 @@ public strictfp class RobotPlayer {
     }
 
     static void runMiner() throws GameActionException {
-        for (Direction dir: directions) {
-            //trying to build the refinery if there is enough soup
-                if (tryBuild(RobotType.REFINERY, dir)) {
-                    numberofrefinerybuilt=numberofrefinerybuilt+1;
-                }
-        }
-        //Find the nearby refinery location
-        if(numberofrefinerybuilt>0){
-            RobotInfo[] r = rc.senseNearbyRobots();
-            for (RobotInfo refine : r) {
-                if (refine.type == RobotType.REFINERY && refine.team == rc.getTeam()) {
-                    RefineryLocation = refine.location;
-                    System.out.println("Refinery location " + RefineryLocation);
-                }
-            }
-        }
-        //Finding the HQ location of the team
         if (HQLocation == null) {
             RobotInfo[] searchRobot = rc.senseNearbyRobots();
             for (RobotInfo robot : searchRobot) {
                 if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
                     HQLocation = robot.location;
+                    System.out.println(" HQ location "+HQLocation);
                 }
             }
         }
-
         tryBlockchain();
+        System.out.println("Team Soup "+rc.getTeamSoup());
+        MapLocation[] souplocation=rc.senseNearbySoup();
+        if(souplocation.length==0){
+            Direction rd=randomDirection();
+            if(tryMove(rd))
+                System.out.println("Robot moved in random direction "+rd);
+        }
+        for(Direction dir:directions){
+            boolean refinerybuilt=tryBuild(RobotType.REFINERY,dir);
+            System.out.println("Refinery Built " +refinerybuilt);
+        }
+        for(MapLocation loc:souplocation){
+            System.out.println("Soup Location "+loc.toString());
+            Direction d=rc.getLocation().directionTo(loc);
+            boolean trytomine=tryMine(d);
+            System.out.println("Try to mine "+trytomine);
+            if(tryMove(d)){
+                System.out.println("Moved to "+d);
+            }
+            for (Direction dir : directions)
+                if (tryRefine(dir))
+                    System.out.println("Robot refined soup! " + rc.getTeamSoup());
+
+        }
         Direction rd=randomDirection();
-        boolean trymovesuccess=tryMove(rd);
-        if (trymovesuccess)
-            System.out.println("Robot moved "+rd.toString());
-        // tryBuild(randomSpawnedByMiner(), randomDirection());
-//        for (Direction dir : directions)
-//            tryBuild(RobotType.FULFILLMENT_CENTER, dir);
-        for (Direction dir : directions)
-            if (tryRefine(dir))
-                System.out.println("Miner refined soup! " + rc.getTeamSoup());
-        for (Direction dir : directions)
-            if (tryMine(dir))
-                System.out.println("Miner mined soup! " + rc.getSoupCarrying());
+        if(tryMove(rd))
+            System.out.println("Robot moved in random direction "+rd);
+
+        System.out.println(" Checking soup status "+rc.getTeamSoup());
+        System.out.println(" Soup limit reached ? "+rc.getType().soupLimit);
 
     }
 
     static void runRefinery() throws GameActionException {
         // System.out.println("Pollution: " + rc.sensePollution(rc.getLocation()));
+
     }
 
     static void runVaporator() throws GameActionException {
