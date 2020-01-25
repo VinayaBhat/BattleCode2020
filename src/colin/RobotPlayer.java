@@ -2,6 +2,9 @@ package colin;
 import battlecode.common.*;
 import player10pdx.Robot;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 import static java.lang.StrictMath.abs;
 
 public strictfp class RobotPlayer {
@@ -26,8 +29,16 @@ public strictfp class RobotPlayer {
     static int numMiners;
     static final int maxMiners = 3;
     static Communications comms = new Communications();
-    static int[][] refineries = new int[5][2];
+    static int[][] refineries = {
+            {-1,-1},
+            {-1,-1},
+            {-1,-1},
+            {-1,-1},
+            {-1,-1}
+    };
+    static int numRefineries = 0;
     static int stepsAwayFromHQ=0;
+    static ArrayList<MapLocation> soupLocations = new ArrayList<>();
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -119,35 +130,69 @@ public strictfp class RobotPlayer {
             }
         }
 
-        int[][] messages = findTeamMessagesInBlockChain();
-
-        //loop through messages from our team
-        for(int[] mes : messages){
-            //System.out.printf("Mes Type: "+mes[1]+" x: "+mes[2]+" y:"+mes[3]);
-            if(mes[0]==-1){
-                System.out.println("end of messages");
+        //print refinery locations
+        for(int[] location : refineries){
+            if(location[0]==-1){
                 break;
-            }else{
-                switch(mes[1]){
-                    //message about the HQ location
-                    case 0:
-                        System.out.println("HQ Location: x:"+ mes[2]+" y:"+mes[3]);
-                        break;
-                    //message about the refinery location
-                    case 1:
-                        System.out.println("Refinery Location: x:"+ mes[2]+" y:"+mes[3]);
-                        break;
+            }
+            else{
+                System.out.println("Refinery at x:"+location[0]+" y:"+location[1]);
+            }
+
+        }
+        if(rc.getRoundNum()>0){
+            int[][] messages = findTeamMessagesInBlockChain();
+
+            //loop through messages from our team
+            for(int[] mes : messages){
+                //System.out.printf("Mes Type: "+mes[1]+" x: "+mes[2]+" y:"+mes[3]);
+                if(mes[0]==-1){
+                    System.out.println("end of messages");
+                    break;
+                }else{
+                    switch(mes[1]){
+                        case 0:
+                            //message about the HQ location
+                            System.out.println("HQ Location: x:"+ mes[2]+" y:"+mes[3]);
+                            break;
+                        case 1:
+                            //message about the refinery location
+                            refineries[numRefineries][0] = mes[2];
+                            refineries[numRefineries][1] = mes[3];
+                            numRefineries++;
+                            System.out.println("Refinery Location: x:"+ mes[2]+" y:"+mes[3]);
+                            break;
+                        case 2:
+                            //message about soup location
+                            MapLocation loc = new MapLocation(mes[2], mes[3]);
+                            soupLocations.add(loc);
+                            System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
+                    }
                 }
             }
         }
 
         MapLocation[] souplocation = rc.senseNearbySoup();
-
+        System.out.println("soups near me: "+souplocation.length);
 
         //if the miner has reached its souplimit
         //and if the teamsoup is enough to build a refinery
         //then build one
-        if(rc.getSoupCarrying()==RobotType.MINER.soupLimit && rc.getTeamSoup()>210){
+        if(rc.getSoupCarrying()==RobotType.MINER.soupLimit) {
+            //deposit to HQ
+            Direction d = rc.getLocation().directionTo(HQLocation);
+            if (tryMove(d)) {
+                System.out.println("moved to HQ");
+            } else if(tryAltMoves(d)){
+
+            }
+            else{
+                if (tryRefine(d)) {
+                    System.out.println("refined");
+                }
+            }
+        }//this next if never gets called right now.
+        else if(rc.getSoupCarrying()==RobotType.MINER.soupLimit && rc.getTeamSoup()>210){
             System.out.println("steps away"+stepsAwayFromHQ);
             //needs to find a refinery or HQ
             boolean refineryPlaced = false;
@@ -183,26 +228,32 @@ public strictfp class RobotPlayer {
                         if(tryMove(Direction.WEST)){
                             System.out.println("moved west");
                         }
+                        break;
                     case WEST:
                         if(tryMove(Direction.EAST)){
                             System.out.println("moved east");
                         }
+                        break;
                     case NORTHEAST:
                         if(tryMove(Direction.SOUTHWEST)){
                             System.out.println("moved southwest");
                         }
+                        break;
                     case NORTHWEST:
                         if(tryMove(Direction.SOUTHEAST)){
                             System.out.println("moved southeast");
                         }
+                        break;
                     case SOUTHEAST:
                         if(tryMove(Direction.NORTHWEST)){
                             System.out.println("moved northwest");
                         }
+                        break;
                     case SOUTHWEST:
                         if(tryMove(Direction.NORTHEAST)){
                             System.out.println("moved northeast");
                         }
+                        break;
                 }
             }
             else {
@@ -217,6 +268,7 @@ public strictfp class RobotPlayer {
                             MapLocation location = robot.getLocation();
                             int[] refineryLocationTransaction = {comms.teamId, 1, location.x, location.y, 0, 0, 0};
                             rc.submitTransaction(refineryLocationTransaction, 10);
+                            rc.submitTransaction(refineryLocationTransaction, 10);
                         }
                     }
                 }
@@ -227,31 +279,81 @@ public strictfp class RobotPlayer {
         }
         else if (souplocation.length == 0) {
             //this should check the block for soup locations
-            Direction rd = randomDirection();
-            if (tryMove(rd)) {
-                System.out.println("Robot moved in random direction " + rd);
-            } else {
-                System.out.println("Robot could not move");
+            System.out.println("inside no near soup size:"+soupLocations.size());
+            if(soupLocations.size()>0){
+                //go to known soupLocations
+                MapLocation soupLoc = soupLocations.get(0);
+                Direction d = rc.getLocation().directionTo(soupLoc);
+                boolean aroundMe = inRadius(rc.getLocation(), soupLoc, 1);
+                if(aroundMe){
+                    if(tryMine(d)){
+                        System.out.println("mined "+d);
+                    }
+                    else{
+                        System.out.println("could not mine "+d);
+                    }
+                }else{
+                    if(tryMove(d)){
+                        System.out.println("moved "+d);
+                    }else if (tryAltMoves(d)){
+
+                    }else {
+                        System.out.println("could not move "+d);
+                    }
+                }
+            }
+            else{
+                Direction rd = randomDirection();
+                if (tryMove(rd)) {
+                    System.out.println("Robot moved in random direction " + rd);
+                } else if (tryAltMoves(rd)) {
+
+                }
+                else {
+                    System.out.println("Robot could not move");
+                }
             }
         }
         //there is soup nearby
         else {
             boolean bySoup=false;
             int step=0;
+            //first check if this soup is found already
+            //or near other soup we know about
+            boolean soupAlreadyKnown = false;
+
+            for(MapLocation seeSoupLoc : souplocation){
+                for(MapLocation knownSoupLoc : soupLocations){
+                    if(seeSoupLoc.x == knownSoupLoc.x && seeSoupLoc.y == knownSoupLoc.y){
+                        //we already have this soup
+                        soupAlreadyKnown = true;
+                    }
+                }
+                if(!soupAlreadyKnown){
+                    //broadcast the soup to everyone
+                    int[] message = {comms.teamId, 2, seeSoupLoc.x, seeSoupLoc.y, 0,0,0};
+                    if(rc.getSoupCarrying()>2){
+                        rc.submitTransaction(message, 2);
+                        System.out.println("Submitted transaction for soup");
+                    }
+                }
+            }
+            System.out.println("Known soup locations: ");
+            for(MapLocation location : soupLocations){
+                System.out.println("Location: x:"+location.x+" y:"+location.y);
+            }
+
             //check if by soup
-            System.out.println("num soups "+souplocation.length);
+            //System.out.println("num soups "+souplocation.length);
             for(MapLocation loc: souplocation) {
                 if(step>7) break;
-                System.out.println("Soup location: "+loc);
-                System.out.println("X dif: "+ abs(rc.getLocation().x - loc.x));
-                System.out.println("Y dif: "+ abs(rc.getLocation().y - loc.y));
                 if (inRadius(rc.getLocation(), loc, 1)) {
                     bySoup = true;
                     Direction d = rc.getLocation().directionTo(loc);
                     if(tryMine(d)){
                         System.out.println("mined "+d);
                     }else{
-                        System.out.println("could not mine??");
+                        //System.out.println("could not mine??");
                     }
                 }
                 step+=1;
@@ -262,7 +364,7 @@ public strictfp class RobotPlayer {
                 for(MapLocation loc: souplocation){
                     Direction d = rc.getLocation().directionTo(loc);
                     if(tryMove(d)){
-                        System.out.println("moved "+d);
+                        System.out.println("moved "+loc.x+" "+loc.y);
                         break;
                     }
                 }
@@ -309,12 +411,130 @@ public strictfp class RobotPlayer {
             }
         } else {
             // No close robots, so search for robots within sight radius
-            tryMove(randomDirection());
+            Direction d = randomDirection();
+            if(tryMove(d)){
+
+            }
         }
     }
 
     static void runNetGun() throws GameActionException {
 
+    }
+
+    static boolean tryAltMoves(Direction d) throws GameActionException {
+        Random random = new Random();
+        int choice = random.nextInt(2);
+        boolean moved = false;
+        switch(d) {
+            case EAST:
+                if (choice == 1) {
+                    if (tryMove(Direction.NORTHEAST)) {
+                        System.out.println("moved northeast");
+                        moved = true;
+                    }
+
+                } else {
+                    if (tryMove(Direction.SOUTHEAST)) {
+                        System.out.println("moved southeast");
+                        moved = true;
+                    }
+                }
+                break;
+            case WEST:
+                if (choice == 1) {
+                    if (tryMove(Direction.NORTHWEST)) {
+                        System.out.println("moved northwest");
+                        moved = true;
+                    }
+                } else {
+                    if (tryMove(Direction.SOUTHWEST)) {
+                        System.out.println("moved southwest");
+                        moved = true;
+                    }
+                }
+                break;
+            case NORTH:
+                if (choice == 1) {
+                    if (tryMove(Direction.NORTHEAST)) {
+                        System.out.println("moved northeast");
+                        moved = true;
+                    }
+                } else {
+                    if (tryMove(Direction.NORTHWEST)) {
+                        System.out.println("moved northwest");
+                        moved = true;
+                    }
+                }
+                break;
+            case SOUTH:
+                if (choice == 1) {
+                    if (tryMove(Direction.SOUTHEAST)) {
+                        System.out.println("moved southeast");
+                        moved = true;
+                    }
+                } else {
+                    if (tryMove(Direction.SOUTHWEST)) {
+                        System.out.println("moved southwest");
+                        moved = true;
+                    }
+                }
+                break;
+            case NORTHEAST:
+                if (choice == 1) {
+                    if (tryMove(Direction.NORTH)) {
+                        System.out.println("moved north");
+                        moved = true;
+                    }
+                } else {
+                    if (tryMove(Direction.EAST)) {
+                        System.out.println("moved east");
+                        moved = true;
+                    }
+                }
+                break;
+            case NORTHWEST:
+                if (choice == 1) {
+                    if (tryMove(Direction.NORTH)) {
+                        System.out.println("moved north");
+                        moved = true;
+                    }
+                } else {
+                    if (tryMove(Direction.WEST)) {
+                        System.out.println("moved west");
+                        moved = true;
+                    }
+                }
+                break;
+            case SOUTHEAST:
+                if (choice == 1) {
+                    if (tryMove(Direction.SOUTH)) {
+                        System.out.println("moved south");
+                        moved = true;
+                    }
+                } else {
+                    if (tryMove(Direction.EAST)) {
+                        System.out.println("moved east");
+                        moved = true;
+                    }
+                }
+                break;
+            case SOUTHWEST:
+                if (choice == 1) {
+                    if (tryMove(Direction.SOUTH)) {
+                        System.out.println("moved south");
+                        moved = true;
+                    }
+                } else {
+                    if (tryMove(Direction.WEST)) {
+                        System.out.println("moved west");
+                        moved = true;
+                    }
+                }
+                break;
+
+        }
+        return moved;
     }
 
     static int[][] findTeamMessagesInBlockChain() throws GameActionException {
