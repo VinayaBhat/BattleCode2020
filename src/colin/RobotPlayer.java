@@ -192,12 +192,6 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-
-        //try and build refinery
-        //for(Direction dir:directions){
-        //    boolean refinerybuilt=tryBuild(RobotType.REFINERY,dir);
-        //    System.out.println("Refinery Built " +refinerybuilt);
-        //}
     }
 
     static void minerMove(Direction d){
