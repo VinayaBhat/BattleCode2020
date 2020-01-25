@@ -1,5 +1,6 @@
 package colin;
 import battlecode.common.*;
+import player10pdx.Robot;
 
 import static java.lang.StrictMath.abs;
 
@@ -26,6 +27,7 @@ public strictfp class RobotPlayer {
     static final int maxMiners = 3;
     static Communications comms = new Communications();
     static int[][] refineries = new int[5][2];
+    static int stepsAwayFromHQ=0;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -141,22 +143,75 @@ public strictfp class RobotPlayer {
 
         MapLocation[] souplocation = rc.senseNearbySoup();
 
+
         //if the miner has reached its souplimit
         //and if the teamsoup is enough to build a refinery
         //then build one
         if(rc.getSoupCarrying()==RobotType.MINER.soupLimit && rc.getTeamSoup()>210){
-            //needs to find a refinery
-            System.out.println("Refinery size: "+refineries[0]==null);
+            System.out.println("steps away"+stepsAwayFromHQ);
+            //needs to find a refinery or HQ
             boolean refineryPlaced = false;
             //we are close to the HQ.
             //need to change this if
-            if (inRadius(HQLocation, rc.getLocation(), 3)){
+            RobotInfo[] robots = rc.senseNearbyRobots();
+            boolean nearHQ = false;
+            for(RobotInfo robot: robots){
+                System.out.println("robot type: "+robot.getType());
+                if(robot.getType()==RobotType.HQ){
+                    nearHQ = true;
+                }
+            }
+            if(!nearHQ){
+                stepsAwayFromHQ++;
+            }
+            if(nearHQ || stepsAwayFromHQ<4){
+                //move away from HQ
+                System.out.println("moving away from HQ");
+                Direction d = rc.getLocation().directionTo(HQLocation);
+                switch(d){
+                    case NORTH:
+                        if(tryMove(Direction.SOUTH)){
+                            System.out.println("moved south");
+                        }
+                        break;
+                    case SOUTH:
+                        if(tryMove(Direction.NORTH)){
+                            System.out.println("moved north");
+                        }
+                        break;
+                    case EAST:
+                        if(tryMove(Direction.WEST)){
+                            System.out.println("moved west");
+                        }
+                    case WEST:
+                        if(tryMove(Direction.EAST)){
+                            System.out.println("moved east");
+                        }
+                    case NORTHEAST:
+                        if(tryMove(Direction.SOUTHWEST)){
+                            System.out.println("moved southwest");
+                        }
+                    case NORTHWEST:
+                        if(tryMove(Direction.SOUTHEAST)){
+                            System.out.println("moved southeast");
+                        }
+                    case SOUTHEAST:
+                        if(tryMove(Direction.NORTHWEST)){
+                            System.out.println("moved northwest");
+                        }
+                    case SOUTHWEST:
+                        if(tryMove(Direction.NORTHEAST)){
+                            System.out.println("moved northeast");
+                        }
+                }
+            }
+            else {
                 Direction dir = randomDirection();
                 if(tryBuild(RobotType.REFINERY, dir)){
                     System.out.println("built");
-                    RobotInfo[] robots = rc.senseNearbyRobots();
-                    System.out.println("length: "+robots.length);
-                    for(RobotInfo robot : robots){
+                    RobotInfo[] r = rc.senseNearbyRobots();
+                    System.out.println("length: "+r.length);
+                    for(RobotInfo robot : r){
                         System.out.println("Robot id: " + robot.getID() + "type: "+ robot.type);
                         if(robot.type == RobotType.REFINERY){
                             MapLocation location = robot.getLocation();
@@ -168,12 +223,7 @@ public strictfp class RobotPlayer {
                 else {
                     System.out.println("can't build "+dir);
                 }
-            }else{
-                Direction d = rc.getLocation().directionTo(HQLocation);
-                if(tryMove(d))
-                    System.out.println("Moving to HQ");
             }
-            tryBuild(RobotType.REFINERY, randomDirection());
         }
         else if (souplocation.length == 0) {
             //this should check the block for soup locations
