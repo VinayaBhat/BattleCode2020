@@ -23,9 +23,9 @@ public strictfp class RobotPlayer {
     static int turnCount;
     static MapLocation HQLocation;
     static int numMiners;
-    static final int maxMiners = 8;
+    static final int maxMiners = 3;
     static Communications comms = new Communications();
-    static int numRefineries;
+    static int[][] refineries = new int[5][2];
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -75,7 +75,7 @@ public strictfp class RobotPlayer {
         System.out.println("Soup: "+rc.getTeamSoup());
         MapLocation[] soupLocations = rc.senseNearbySoup();
 
-        int[][] messages = findInBlockChain(0);
+        int[][] messages = findInBlockChain();
         System.out.println("Messages in block: "+messages.length);
         if(rc.getTeamSoup()>25 && numMiners<maxMiners){
             boolean minerPlaced = false;
@@ -117,13 +117,39 @@ public strictfp class RobotPlayer {
             }
         }
 
+        int[][] messages = findInBlockChain();
+
+        //loop through messages from our team
+        for(int[] mes : messages){
+            //System.out.printf("Mes Type: "+mes[1]+" x: "+mes[2]+" y:"+mes[3]);
+            if(mes[0]==-1){
+                System.out.println("end of messages");
+                break;
+            }else{
+                switch(mes[1]){
+                    //message about the HQ location
+                    case 0:
+                        System.out.println("HQ Location: x:"+ mes[2]+" y:"+mes[3]);
+                        break;
+                    //message about the refinery location
+                    case 1:
+                        System.out.println("Refinery Location: x:"+ mes[2]+" y:"+mes[3]);
+                        break;
+                }
+            }
+        }
+
         MapLocation[] souplocation = rc.senseNearbySoup();
 
-        //if no nearby soup then move randomly
+        //if the miner has reached its souplimit
+        //and if the teamsoup is enough to build a refinery
+        //then build one
         if(rc.getSoupCarrying()==RobotType.MINER.soupLimit && rc.getTeamSoup()>210){
             //needs to find a refinery
-
+            System.out.println("Refinery size: "+refineries[0]==null);
             boolean refineryPlaced = false;
+            //we are close to the HQ.
+            //need to change this if
             if (inRadius(HQLocation, rc.getLocation(), 3)){
                 Direction dir = randomDirection();
                 if(tryBuild(RobotType.REFINERY, dir)){
@@ -134,7 +160,7 @@ public strictfp class RobotPlayer {
                         System.out.println("Robot id: " + robot.getID() + "type: "+ robot.type);
                         if(robot.type == RobotType.REFINERY){
                             MapLocation location = robot.getLocation();
-                            int[] refineryLocationTransaction = {comms.teamId, 0, location.x, location.y, 0, 0, 0};
+                            int[] refineryLocationTransaction = {comms.teamId, 1, location.x, location.y, 0, 0, 0};
                             rc.submitTransaction(refineryLocationTransaction, 10);
                         }
                     }
@@ -241,9 +267,17 @@ public strictfp class RobotPlayer {
 
     }
 
-    static int[][] findInBlockChain(int messageType) throws GameActionException {
+    static int[][] findInBlockChain() throws GameActionException {
         Transaction[] transactions = rc.getBlock(rc.getRoundNum()-1);
-        int[][] allMessages = new int[7][7];
+        int[][] allMessages = {
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1}};
+
         int count = 0;
         for(Transaction transaction : transactions){
             int[] message = transaction.getMessage();
