@@ -2,6 +2,11 @@ package team10player;
 import battlecode.common.*;
 import com.sun.org.apache.regexp.internal.recompile;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
 public strictfp class RobotPlayer {
     static RobotController rc;
 
@@ -19,7 +24,14 @@ public strictfp class RobotPlayer {
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
     static int turnCount;
-    static MapLocation HQLocation;
+    static int miners = 0;
+    static MapLocation HQLoc;
+    static int refineries=0;
+    static ArrayList<MapLocation> souplocation=new ArrayList<>();
+    static Map<MapLocation,Boolean> map=new HashMap<MapLocation, Boolean>();
+
+
+
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -34,7 +46,6 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
-        // System.out.println("I'm a " + rc.getType() + " and I just got created!");
 
         while (true) {
             turnCount += 1;
@@ -44,8 +55,12 @@ public strictfp class RobotPlayer {
                 // You can add the missing ones or rewrite this into your own control structure.
                 // System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
-                    case HQ:                 runHQ();                break;
-                    case MINER:              runMiner();             break;
+                    case HQ:
+                        runHQ();
+                        break;
+                    case MINER:
+                        runMiner();
+                        break;
 //                    case REFINERY:           runRefinery();          break;
 //                    case VAPORATOR:          runVaporator();         break;
 //                    case DESIGN_SCHOOL:      runDesignSchool();      break;
@@ -66,53 +81,90 @@ public strictfp class RobotPlayer {
     }
 
     static void runHQ() throws GameActionException {
-        for (Direction dir : directions)
-            //Building miners in all directions around HQ
-            tryBuild(RobotType.MINER, dir);
+        if (miners < 10){
+        for (Direction dir : directions) {  //Building miners in all directions around HQ
+            if (tryBuild(RobotType.MINER, dir)) {
+                System.out.println("Miner" + miners + " created at " + rc.getLocation());
+                miners = miners + 1;
+            }
+        }
+    }
     }
 
     static void runMiner() throws GameActionException {
-        if (HQLocation == null) {
-            RobotInfo[] searchRobot = rc.senseNearbyRobots();
-            for (RobotInfo robot : searchRobot) {
-                if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
-                    HQLocation = robot.location;
-                    System.out.println(" HQ location "+HQLocation);
+        if(HQLoc==null){
+            RobotInfo[] hq=rc.senseNearbyRobots();
+            for(RobotInfo ishqpresent:hq){
+                if(ishqpresent.type==RobotType.HQ && rc.getTeam()==ishqpresent.team){
+                    HQLoc=ishqpresent.location;
+                    System.out.println("HQ found at "+HQLoc);
                 }
             }
         }
-        tryBlockchain();
-        System.out.println("Team Soup "+rc.getTeamSoup());
-        MapLocation[] souplocation=rc.senseNearbySoup();
-        if(souplocation.length==0){
-            Direction rd=randomDirection();
-            if(tryMove(rd))
-                System.out.println("Robot moved in random direction "+rd);
-        }
-        for(Direction dir:directions){
-            boolean refinerybuilt=tryBuild(RobotType.REFINERY,dir);
-            System.out.println("Refinery Built " +refinerybuilt);
-        }
-        for(MapLocation loc:souplocation){
-            System.out.println("Soup Location "+loc.toString());
-            Direction d=rc.getLocation().directionTo(loc);
-            boolean trytomine=tryMine(d);
-            System.out.println("Try to mine "+trytomine);
-            if(tryMove(d)){
-                System.out.println("Moved to "+d);
+        checkIfSoupGone();
+
+
+
+        if(rc.getSoupCarrying()==RobotType.MINER.soupLimit){
+            Direction minerdir=rc.getLocation().directionTo(HQLoc);
+            if(tryMove(minerdir)){
+                System.out.println("trying to move towards HQ to deposit soup");
             }
-            for (Direction dir : directions)
-                if (tryRefine(dir))
-                    System.out.println("Robot refined soup! " + rc.getTeamSoup());
+            if(tryRefine(minerdir)){
+                System.out.println("Pollution before refining "+rc.sensePollution(HQLoc));
+                System.out.println("Miner deposited soup at HQ and refined");
+                System.out.println("Pollution after refining "+rc.sensePollution(HQLoc));
+            }
+        }else if(souplocation.size()>0){
+            goTo(rc.getLocation().directionTo(souplocation.get(0)));
+            if(tryMine(rc.getLocation().directionTo(souplocation.get(0)))) {
+                System.out.println("ROBOT MINED SOUP");
+            }
 
+        }else{
+            Direction rd=randomDirection();
+            if(tryMove(rd)){
+                System.out.println("ROBOT moved randomly");
+            }
         }
-        Direction rd=randomDirection();
-        if(tryMove(rd))
-            System.out.println("Robot moved in random direction "+rd);
 
-        System.out.println(" Checking soup status "+rc.getTeamSoup());
-        System.out.println(" Soup limit reached ? "+rc.getType().soupLimit);
+        //tryBlockchain();
+        MapLocation[] souploc=rc.senseNearbySoup();
+        for(MapLocation sd:souploc){
+            if(!souplocation.contains(sd)){
+                souplocation.add(sd);
+            }
+        }
+        if(refineries<2){
+            for(int i=0;i<2;i++){
+                tryMove(randomDirection());
+            }
+            if(tryBuild(RobotType.REFINERY,randomDirection())){
+                System.out.println("Robot built at refinery");
+                refineries++;
+            }
+        }
 
+
+            }
+
+    private static void checkIfSoupGone() throws GameActionException {
+        if (souplocation.size() > 0) {
+            MapLocation targetSoupLoc = souplocation.get(0);
+            if (rc.canSenseLocation(targetSoupLoc)
+                    && rc.senseSoup(targetSoupLoc) == 0) {
+                souplocation.remove(0);
+            }
+        }
+    }
+
+    private static boolean goTo(Direction dir) throws GameActionException {
+        Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+        for (Direction d : toTry){
+            if(tryMove(d))
+                return true;
+        }
+        return false;
     }
 
     static void runRefinery() throws GameActionException {
@@ -259,7 +311,9 @@ public strictfp class RobotPlayer {
             }
             if (rc.canSubmitTransaction(message, 10))
                 rc.submitTransaction(message, 10);
+
         }
         // System.out.println(rc.getRoundMessages(turnCount-1));
+
     }
 }

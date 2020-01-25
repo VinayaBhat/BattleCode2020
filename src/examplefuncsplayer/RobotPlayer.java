@@ -18,9 +18,7 @@ public strictfp class RobotPlayer {
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
     static int turnCount;
-    static MapLocation HQLocation;
-    static MapLocation RefineryLocation;
-    static int numberofrefinerybuilt=0;
+
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -35,14 +33,12 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
-        System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 // Here, we've separated the controls into a different method for each RobotType.
                 // You can add the missing ones or rewrite this into your own control structure.
-                System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
                     case HQ:                 runHQ();                break;
                     case MINER:              runMiner();             break;
@@ -72,46 +68,10 @@ public strictfp class RobotPlayer {
     }
 
     static void runMiner() throws GameActionException {
-        for (Direction dir: directions) {
-            //trying to build the refinery if there is enough soup
-                if (tryBuild(RobotType.REFINERY, dir)) {
-                    numberofrefinerybuilt=numberofrefinerybuilt+1;
-                }
-        }
-        //Find the nearby refinery location
-        if(numberofrefinerybuilt>0){
-            RobotInfo[] r = rc.senseNearbyRobots();
-            for (RobotInfo refine : r) {
-                if (refine.type == RobotType.REFINERY && refine.team == rc.getTeam()) {
-                    RefineryLocation = refine.location;
-                    System.out.println("Refinery location " + RefineryLocation);
-                }
-            }
-        }
-        //Finding the HQ location of the team
-        if (HQLocation == null) {
-            RobotInfo[] searchRobot = rc.senseNearbyRobots();
-            for (RobotInfo robot : searchRobot) {
-                if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
-                    HQLocation = robot.location;
-                }
-            }
-        }
 
         tryBlockchain();
         Direction rd=randomDirection();
-        boolean trymovesuccess=tryMove(rd);
-        if (trymovesuccess)
-            System.out.println("Robot moved "+rd.toString());
-        // tryBuild(randomSpawnedByMiner(), randomDirection());
-//        for (Direction dir : directions)
-//            tryBuild(RobotType.FULFILLMENT_CENTER, dir);
-        for (Direction dir : directions)
-            if (tryRefine(dir))
-                System.out.println("Miner refined soup! " + rc.getTeamSoup());
-        for (Direction dir : directions)
-            if (tryMine(dir))
-                System.out.println("Miner mined soup! " + rc.getSoupCarrying());
+
 
     }
 
