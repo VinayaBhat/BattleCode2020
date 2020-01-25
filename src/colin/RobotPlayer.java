@@ -75,7 +75,7 @@ public strictfp class RobotPlayer {
         System.out.println("Soup: "+rc.getTeamSoup());
         MapLocation[] soupLocations = rc.senseNearbySoup();
 
-        int[][] messages = findInBlockChain();
+        int[][] messages = findTeamMessagesInBlockChain();
         System.out.println("Messages in block: "+messages.length);
         if(rc.getTeamSoup()>25 && numMiners<maxMiners){
             boolean minerPlaced = false;
@@ -117,7 +117,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        int[][] messages = findInBlockChain();
+        int[][] messages = findTeamMessagesInBlockChain();
 
         //loop through messages from our team
         for(int[] mes : messages){
@@ -267,7 +267,7 @@ public strictfp class RobotPlayer {
 
     }
 
-    static int[][] findInBlockChain() throws GameActionException {
+    static int[][] findTeamMessagesInBlockChain() throws GameActionException {
         Transaction[] transactions = rc.getBlock(rc.getRoundNum()-1);
         int[][] allMessages = {
                 {-1,-1,-1,-1,-1,-1,-1},
