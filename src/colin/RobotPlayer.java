@@ -40,9 +40,9 @@ public strictfp class RobotPlayer {
     static int maxRefineries = 2;
     static int stepsAwayFromHQ = 0;
     static ArrayList<MapLocation> soupLocations = new ArrayList<>();
-    static ArrayList<MapLocation> landscaperLocations = new ArrayList<>();
-    static int numLandscapers = 0;
-    static int maxLandscapers = 1;
+    static ArrayList<MapLocation> designSchoolLocations = new ArrayList<>();
+    static int numDesignSchools = 0;
+    static int maxDesignSchools = 1;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -227,8 +227,8 @@ public strictfp class RobotPlayer {
                             break;
                         case 4:
                             MapLocation location2 = new MapLocation(mes[2], mes[3]);
-                            landscaperLocations.add(location2);
-                            numLandscapers++;
+                            designSchoolLocations.add(location2);
+                            numDesignSchools++;
                             System.out.println("New Design School");
                             break;
                     }
@@ -281,11 +281,11 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        else if(numLandscapers<maxLandscapers && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5){
+        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5){
             /*
             Here we build a landscaper
              */
-            System.out.println("Current landscapers: "+numLandscapers +" max: "+maxLandscapers);
+            System.out.println("Current landscapers: "+ numDesignSchools +" max: "+ maxDesignSchools);
             if(!inRadius(rc.getLocation(), HQLocation, 3)){
                 Direction d = rc.getLocation().directionTo(HQLocation);
                 if(tryMove(d)){
