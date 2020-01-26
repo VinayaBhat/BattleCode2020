@@ -165,8 +165,17 @@ public strictfp class RobotPlayer {
                         case 2:
                             //message about soup location
                             MapLocation loc = new MapLocation(mes[2], mes[3]);
-                            soupLocations.add(loc);
-                            System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
+                            if(!soupLocations.contains(loc)){
+                                System.out.println("new location");
+                                soupLocations.add(loc);
+                            }
+                            //System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
+                            break;
+                        case 3:
+                            MapLocation loc1 = new MapLocation(mes[2], mes[3]);
+                            soupLocations.remove(loc1);
+                            System.out.println("Removed soup location");
+                            break;
                     }
                 }
             }
@@ -268,7 +277,6 @@ public strictfp class RobotPlayer {
                             MapLocation location = robot.getLocation();
                             int[] refineryLocationTransaction = {comms.teamId, 1, location.x, location.y, 0, 0, 0};
                             rc.submitTransaction(refineryLocationTransaction, 10);
-                            rc.submitTransaction(refineryLocationTransaction, 10);
                         }
                     }
                 }
@@ -290,7 +298,16 @@ public strictfp class RobotPlayer {
                         System.out.println("mined "+d);
                     }
                     else{
-                        System.out.println("could not mine "+d);
+                        //location around robot but could not mine.
+                        int soupAmount = rc.senseSoup(soupLoc);
+                        System.out.println("could not mine "+d+" soup amount: "+soupAmount);
+                        if(soupAmount==0){
+                            int[] message = {comms.teamId, 3, soupLoc.x, soupLoc.y, 0,0,0};
+                            if(rc.getTeamSoup()>4){
+                                rc.submitTransaction(message, 3);
+                                System.out.println("Submitted transaction to remove soup");
+                            }
+                        }
                     }
                 }else{
                     if(tryMove(d)){
@@ -332,12 +349,16 @@ public strictfp class RobotPlayer {
                 if(!soupAlreadyKnown){
                     //broadcast the soup to everyone
                     int[] message = {comms.teamId, 2, seeSoupLoc.x, seeSoupLoc.y, 0,0,0};
-                    if(rc.getSoupCarrying()>2){
-                        rc.submitTransaction(message, 2);
-                        System.out.println("Submitted transaction for soup");
+                    if(!soupLocations.contains(seeSoupLoc)) {
+                        if (rc.getTeamSoup() > 2) {
+                            rc.submitTransaction(message, 2);
+                            System.out.println("Submitted transaction for soup");
+                        }
                     }
                 }
             }
+
+
             System.out.println("Known soup locations: ");
             for(MapLocation location : soupLocations){
                 System.out.println("Location: x:"+location.x+" y:"+location.y);
@@ -353,11 +374,25 @@ public strictfp class RobotPlayer {
                     if(tryMine(d)){
                         System.out.println("mined "+d);
                     }else{
-                        //System.out.println("could not mine??");
+                        //could not mine so check if there is actually soup there?
+
                     }
                 }
                 step+=1;
             }
+
+/*            if(!bySoup && soupLocations.size()<1){
+                for(MapLocation location: soupLocations){
+                    if(inRadius(rc.getLocation(), location, 1)){
+                        //remove the location from ledger
+                        int[] message = {comms.teamId, 3, location.x, location.y, 0, 0, 0 };
+                        if(rc.getTeamSoup()>2){
+                            rc.submitTransaction(message, 2);
+                        }
+                    }
+                }
+            }*/
+
             if(!bySoup){
                 //not by soup so move
                 //System.out.println("i should move");
@@ -674,6 +709,6 @@ public strictfp class RobotPlayer {
 class Communications {
     public Communications(){}
     public int teamId = 5682394;
-    public String[] messageType = {"HQ Location", "Refinery Location", "Soup Location"};
+    public String[] messageType = {"HQ Location", "Refinery Location", "Add Soup Location", "Remove Soup Location"};
 }
 
