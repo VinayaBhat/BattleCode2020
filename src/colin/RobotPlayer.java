@@ -206,7 +206,7 @@ public strictfp class RobotPlayer {
             //deposit to HQ
             Direction d = rc.getLocation().directionTo(HQLocation);
             if(inRadius(HQLocation, rc.getLocation(), 1)){
-                if(tryMine(d)){
+                if(tryRefine(d)){
                     System.out.println("mined");
                 }
                 else{
