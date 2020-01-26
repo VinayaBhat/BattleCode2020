@@ -90,6 +90,10 @@ public strictfp class RobotPlayer {
 
         int[][] messages = findTeamMessagesInBlockChain();
         System.out.println("Messages in block: "+messages.length);
+        /*
+        With enough soup and not hit max miners
+        then create a miner towards a soup if possible
+         */
         if(rc.getTeamSoup()>25 && numMiners<maxMiners){
             boolean minerPlaced = false;
             Direction d = null;
@@ -120,6 +124,9 @@ public strictfp class RobotPlayer {
     static void runMiner() throws GameActionException {
 
         System.out.println("soup carrying: "+rc.getSoupCarrying());
+        /*
+        Get the HQ location when first created
+         */
         if (HQLocation == null) {
             RobotInfo[] searchRobot = rc.senseNearbyRobots();
             for (RobotInfo robot : searchRobot) {
@@ -140,6 +147,11 @@ public strictfp class RobotPlayer {
             }
 
         }
+
+        /*
+        If its not the first round then get the block
+        and deal with the messages in the block
+         */
         if(rc.getRoundNum()>0){
             int[][] messages = findTeamMessagesInBlockChain();
 
@@ -184,9 +196,10 @@ public strictfp class RobotPlayer {
         MapLocation[] souplocation = rc.senseNearbySoup();
         System.out.println("soups near me: "+souplocation.length);
 
-        //if the miner has reached its souplimit
-        //and if the teamsoup is enough to build a refinery
-        //then build one
+        /*
+        if the miner has reached its souplimit
+        then go to the HQ
+        */
         if(rc.getSoupCarrying()==RobotType.MINER.soupLimit) {
             //deposit to HQ
             Direction d = rc.getLocation().directionTo(HQLocation);
@@ -200,8 +213,13 @@ public strictfp class RobotPlayer {
                     System.out.println("refined");
                 }
             }
-        }//this next if never gets called right now.
+        }
         else if(rc.getSoupCarrying()==RobotType.MINER.soupLimit && rc.getTeamSoup()>210){
+            /*
+            Here is where we build the refinery.
+            it currently isn't being called
+            because the first if always executes over this loop
+             */
             System.out.println("steps away"+stepsAwayFromHQ);
             //needs to find a refinery or HQ
             boolean refineryPlaced = false;
@@ -286,10 +304,14 @@ public strictfp class RobotPlayer {
             }
         }
         else if (souplocation.length == 0) {
-            //this should check the block for soup locations
-            System.out.println("inside no near soup size:"+soupLocations.size());
+            /*
+            Here the miner does not detect any soup near it
+             */
+            //System.out.println("inside no near soup size:"+soupLocations.size());
             if(soupLocations.size()>0){
-                //go to known soupLocations
+                /*
+                If there is known soup locations then go there
+                 */
                 MapLocation soupLoc = soupLocations.get(0);
                 Direction d = rc.getLocation().directionTo(soupLoc);
                 boolean aroundMe = inRadius(rc.getLocation(), soupLoc, 1);
@@ -320,6 +342,9 @@ public strictfp class RobotPlayer {
                 }
             }
             else{
+                /*
+                If there are no known soup locations move randomly?
+                 */
                 Direction rd = randomDirection();
                 if (tryMove(rd)) {
                     System.out.println("Robot moved in random direction " + rd);
@@ -333,19 +358,29 @@ public strictfp class RobotPlayer {
         }
         //there is soup nearby
         else {
+            /*
+            Here the robot detects that there is soup
+            within its radius
+             */
             boolean bySoup=false;
             int step=0;
             //first check if this soup is found already
             //or near other soup we know about
             boolean soupAlreadyKnown = false;
 
+            /*
+            Check if any of the soups in radius are not in
+            the global variable.
+             */
             for(MapLocation seeSoupLoc : souplocation){
+                //first check if the soup is known
                 for(MapLocation knownSoupLoc : soupLocations){
                     if(seeSoupLoc.x == knownSoupLoc.x && seeSoupLoc.y == knownSoupLoc.y){
                         //we already have this soup
                         soupAlreadyKnown = true;
                     }
                 }
+                //if soup isn't known then submit transaction
                 if(!soupAlreadyKnown){
                     //broadcast the soup to everyone
                     int[] message = {comms.teamId, 2, seeSoupLoc.x, seeSoupLoc.y, 0,0,0};
@@ -358,14 +393,22 @@ public strictfp class RobotPlayer {
                 }
             }
 
+            /*
+            Print out all the global soup locations
+            this is good for debugging.
 
             System.out.println("Known soup locations: ");
             for(MapLocation location : soupLocations){
                 System.out.println("Location: x:"+location.x+" y:"+location.y);
             }
+             */
 
-            //check if by soup
-            //System.out.println("num soups "+souplocation.length);
+            /*
+            Check if the soup is within 1 square
+            Mine if it is
+            Only need to go up to 7 locations because
+            souplocation should be ordered by closest? <-- this is an assumption
+             */
             for(MapLocation loc: souplocation) {
                 if(step>7) break;
                 if (inRadius(rc.getLocation(), loc, 1)) {
@@ -375,24 +418,15 @@ public strictfp class RobotPlayer {
                         System.out.println("mined "+d);
                     }else{
                         //could not mine so check if there is actually soup there?
-
                     }
                 }
                 step+=1;
             }
 
-/*            if(!bySoup && soupLocations.size()<1){
-                for(MapLocation location: soupLocations){
-                    if(inRadius(rc.getLocation(), location, 1)){
-                        //remove the location from ledger
-                        int[] message = {comms.teamId, 3, location.x, location.y, 0, 0, 0 };
-                        if(rc.getTeamSoup()>2){
-                            rc.submitTransaction(message, 2);
-                        }
-                    }
-                }
-            }*/
-
+            /*
+            Finally, if not by any soup then try and move towards
+            the soup that is within the robots radius
+             */
             if(!bySoup){
                 //not by soup so move
                 //System.out.println("i should move");
