@@ -26,6 +26,7 @@ public strictfp class RobotPlayer {
     static RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
+    static Random random = new Random();
     static int turnCount;
     static MapLocation HQLocation;
     static int numMiners;
@@ -39,7 +40,7 @@ public strictfp class RobotPlayer {
             {-1,-1}
     };
     static int numRefineries = 0;
-    static int maxRefineries = 3;
+    static int maxRefineries = 2;
     static int stepsAwayFromHQ = 0;
     static ArrayList<MapLocation> soupLocations = new ArrayList<>();
 
@@ -265,11 +266,16 @@ public strictfp class RobotPlayer {
                     System.out.println("moving to closest");
                 }
                 else{
-                    System.out.println("something is blocking me");
+                    if(tryAltMoves(d)){
+                        System.out.println("moved alt");
+                    }
+                    else{
+                        System.out.println("could not move alt");
+                    }
                 }
             }
         }
-        else if(souplocation.length>5 && !inRadius(HQLocation, rc.getLocation(), 6) && !byRobot(RobotType.REFINERY) && numRefineries<maxRefineries){
+        else if(souplocation.length>10 && !inRadius(HQLocation, rc.getLocation(), 6) && !byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
             /*
             Here is where we build the refinery.
             it currently isn't being called
@@ -488,8 +494,13 @@ public strictfp class RobotPlayer {
                 for(MapLocation loc: souplocation){
                     Direction d = rc.getLocation().directionTo(loc);
                     if(tryMove(d)){
-                        System.out.println("moved "+loc.x+" "+loc.y);
+                        System.out.println("moved "+d);
                         break;
+                    }
+                    else{
+                        if(tryAltMoves(d)){
+                            System.out.println("moved "+d);
+                        }
                     }
                 }
             }
@@ -589,12 +600,12 @@ public strictfp class RobotPlayer {
 
 
     static boolean tryAltMoves(Direction d) throws GameActionException {
-        Random random = new Random();
-        int choice = random.nextInt(2);
+        boolean flip = (rc.getRoundNum()%2==0);
         boolean moved = false;
+        System.out.println("choice: "+flip);
         switch(d) {
             case EAST:
-                if (choice == 1) {
+                if (flip) {
                     if (tryMove(Direction.NORTHEAST)) {
                         System.out.println("moved northeast");
                         moved = true;
@@ -606,9 +617,9 @@ public strictfp class RobotPlayer {
                         moved = true;
                     }
                 }
-                break;
+                return moved;
             case WEST:
-                if (choice == 1) {
+                if (flip) {
                     if (tryMove(Direction.NORTHWEST)) {
                         System.out.println("moved northwest");
                         moved = true;
@@ -619,9 +630,9 @@ public strictfp class RobotPlayer {
                         moved = true;
                     }
                 }
-                break;
+                return moved;
             case NORTH:
-                if (choice == 1) {
+                if (flip) {
                     if (tryMove(Direction.NORTHEAST)) {
                         System.out.println("moved northeast");
                         moved = true;
@@ -632,9 +643,9 @@ public strictfp class RobotPlayer {
                         moved = true;
                     }
                 }
-                break;
+                return moved;
             case SOUTH:
-                if (choice == 1) {
+                if (flip) {
                     if (tryMove(Direction.SOUTHEAST)) {
                         System.out.println("moved southeast");
                         moved = true;
@@ -645,9 +656,9 @@ public strictfp class RobotPlayer {
                         moved = true;
                     }
                 }
-                break;
+                return moved;
             case NORTHEAST:
-                if (choice == 1) {
+                if (flip) {
                     if (tryMove(Direction.NORTH)) {
                         System.out.println("moved north");
                         moved = true;
@@ -658,9 +669,9 @@ public strictfp class RobotPlayer {
                         moved = true;
                     }
                 }
-                break;
+                return moved;
             case NORTHWEST:
-                if (choice == 1) {
+                if (flip) {
                     if (tryMove(Direction.NORTH)) {
                         System.out.println("moved north");
                         moved = true;
@@ -671,22 +682,27 @@ public strictfp class RobotPlayer {
                         moved = true;
                     }
                 }
-                break;
+                return moved;
             case SOUTHEAST:
-                if (choice == 1) {
+                if (flip) {
                     if (tryMove(Direction.SOUTH)) {
                         System.out.println("moved south");
                         moved = true;
+                    }else{
+                        System.out.println("tried south");
                     }
                 } else {
                     if (tryMove(Direction.EAST)) {
                         System.out.println("moved east");
                         moved = true;
                     }
+                    else{
+                        System.out.println("tried east");
+                    }
                 }
-                break;
+                return moved;
             case SOUTHWEST:
-                if (choice == 1) {
+                if (flip) {
                     if (tryMove(Direction.SOUTH)) {
                         System.out.println("moved south");
                         moved = true;
@@ -697,8 +713,7 @@ public strictfp class RobotPlayer {
                         moved = true;
                     }
                 }
-                break;
-
+                return moved;
         }
         return moved;
     }
