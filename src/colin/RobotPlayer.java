@@ -4,6 +4,7 @@ import player10pdx.HQ;
 import player10pdx.Robot;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Random;
 
 import static java.lang.StrictMath.abs;
@@ -38,7 +39,8 @@ public strictfp class RobotPlayer {
             {-1,-1}
     };
     static int numRefineries = 0;
-    static int stepsAwayFromHQ=0;
+    static int maxRefineries = 3;
+    static int stepsAwayFromHQ = 0;
     static ArrayList<MapLocation> soupLocations = new ArrayList<>();
 
     /**
@@ -88,13 +90,45 @@ public strictfp class RobotPlayer {
     static void runHQ() throws GameActionException {
         System.out.println("Soup: "+rc.getTeamSoup());
         MapLocation[] soupLocations = rc.senseNearbySoup();
-
-        int[][] messages = findTeamMessagesInBlockChain();
-        System.out.println("Messages in block: "+messages.length);
         /*
-        With enough soup and not hit max miners
-        then create a miner towards a soup if possible
+        If its not the first round then get the block
+        and deal with the messages in the block
          */
+        if(rc.getRoundNum()>0){
+            int[][] messages = findTeamMessagesInBlockChain();
+
+            //loop through messages from our team
+            for(int[] mes : messages){
+                //messages is initialized with all -1
+                //so if there is a -1 it is the end
+                if(mes[0]==-1){
+                    System.out.println("end of messages");
+                    break;
+                }else{
+                    switch(mes[1]){
+                        case 0:
+                            //message about the HQ location
+                            //don't need to do anything
+                            break;
+                        case 1:
+                            //message about the refinery location
+                            refineries[numRefineries][0] = mes[2];
+                            refineries[numRefineries][1] = mes[3];
+                            numRefineries++;
+                            System.out.println("Refinery Location: x:"+ mes[2]+" y:"+mes[3]);
+                            break;
+                        case 2:
+                            //message about soup location
+                            System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
+                            break;
+                        case 3:
+                            System.out.println("Removed soup location");
+                            break;
+                    }
+                }
+            }
+        }
+
         if(rc.getTeamSoup()>25 && numMiners<maxMiners){
             boolean minerPlaced = false;
             Direction d = null;
@@ -203,26 +237,39 @@ public strictfp class RobotPlayer {
         then go to the HQ
         */
         if(rc.getSoupCarrying()==RobotType.MINER.soupLimit) {
-            //deposit to HQ
-            Direction d = rc.getLocation().directionTo(HQLocation);
-            if(inRadius(HQLocation, rc.getLocation(), 1)){
+
+            //find the closest deposit location
+            int size = numRefineries+1;
+            MapLocation[] locations = new MapLocation[size];
+            locations[0] = HQLocation;
+            for(int i = 1; i<size; i++){
+                MapLocation newLocation = new MapLocation(refineries[i-1][0],refineries[i-1][1]);
+                System.out.println("adding "+newLocation);
+                locations[i] = newLocation;
+            }
+
+            //find the direction
+            MapLocation closest = findNearestLocation(locations);
+
+            Direction d = rc.getLocation().directionTo(closest);
+            if(inRadius(closest, rc.getLocation(), 1)){
                 if(tryRefine(d)){
                     System.out.println("mined");
                 }
                 else{
-                    System.out.println("by HQ, can't mine");
+                    System.out.println("by closest, can't mine");
                 }
             }
             else{
                 if(tryMove(d)){
-                    System.out.println("moving to HQ");
+                    System.out.println("moving to closest");
                 }
                 else{
                     System.out.println("something is blocking me");
                 }
             }
         }
-        else if(souplocation.length>5 && !inRadius(HQLocation, rc.getLocation(), 6) && !byRobot(RobotType.REFINERY)){
+        else if(souplocation.length>5 && !inRadius(HQLocation, rc.getLocation(), 6) && !byRobot(RobotType.REFINERY) && numRefineries<maxRefineries){
             /*
             Here is where we build the refinery.
             it currently isn't being called
@@ -499,6 +546,27 @@ public strictfp class RobotPlayer {
 
     }
 
+    static MapLocation findNearestLocation(MapLocation[] locations){
+        int count = 0;
+        MapLocation closest = new MapLocation(1,1);
+        MapLocation myLocation = rc.getLocation();
+        System.out.println("Refinery Locations: ");
+        for(MapLocation location : locations){
+            System.out.println("- "+location.x+"- -"+location.y+"-");
+            if(count==0){
+                closest = location;
+            }
+            else{
+                if(distanceTo(myLocation,location)<distanceTo(myLocation,closest)){
+                    System.out.println("new closest: "+location);
+                    closest = location;
+                }
+            }
+            count++;
+        }
+        return closest;
+    }
+
     static boolean moveToHQ() throws GameActionException {
         boolean moved = false;
         Direction d = rc.getLocation().directionTo(HQLocation);
@@ -660,6 +728,20 @@ public strictfp class RobotPlayer {
 
     static boolean inRadius(MapLocation loc1, MapLocation loc2, int radius){
         return (abs(loc1.x-loc2.x) < radius+1 && abs(loc1.y-loc2.y) < radius+1);
+    }
+
+    static int distanceTo(MapLocation location1, MapLocation location2){
+        int xDifference = abs(location1.x-location2.x);
+        int yDifference = abs(location1.y - location2.y);
+        if(xDifference>yDifference){
+            return xDifference;
+        }
+        else if(yDifference>xDifference){
+            return yDifference;
+        }
+        else{
+            return xDifference;
+        }
     }
 
 
