@@ -1,9 +1,7 @@
 package teamplayer;
 
 import battlecode.common.*;
-import lectureplayer.HQ;
-import lectureplayer.Robot;
-import lectureplayer.Util;
+
 
 import java.util.ArrayList;
 
