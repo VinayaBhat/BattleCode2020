@@ -1,6 +1,5 @@
 package colin;
 import battlecode.common.*;
-import player10pdx.Robot;
 
 import java.util.ArrayList;
 import java.util.Random;
