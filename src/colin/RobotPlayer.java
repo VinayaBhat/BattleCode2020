@@ -1,10 +1,7 @@
 package colin;
 import battlecode.common.*;
-import player10pdx.HQ;
-import player10pdx.Robot;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Random;
 
 import static java.lang.StrictMath.abs;
@@ -30,7 +27,7 @@ public strictfp class RobotPlayer {
     static int turnCount;
     static MapLocation HQLocation;
     static int numMiners;
-    static final int maxMiners = 3;
+    static final int maxMiners = 6;
     static Communications comms = new Communications();
     static int[][] refineries = {
             {-1,-1},
@@ -43,6 +40,9 @@ public strictfp class RobotPlayer {
     static int maxRefineries = 2;
     static int stepsAwayFromHQ = 0;
     static ArrayList<MapLocation> soupLocations = new ArrayList<>();
+    static ArrayList<MapLocation> landscaperLocations = new ArrayList<>();
+    static int numLandscapers = 0;
+    static int maxLandscapers = 1;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -69,11 +69,11 @@ public strictfp class RobotPlayer {
                 switch (rc.getType()) {
                     case HQ:                 runHQ();                break;
                     case MINER:              runMiner();             break;
-//                    case REFINERY:           runRefinery();          break;
+                    case REFINERY:           runRefinery();          break;
 //                    case VAPORATOR:          runVaporator();         break;
-//                    case DESIGN_SCHOOL:      runDesignSchool();      break;
+                    case DESIGN_SCHOOL:      runDesignSchool();      break;
 //                    case FULFILLMENT_CENTER: runFulfillmentCenter(); break;
-//                    case LANDSCAPER:         runLandscaper();        break;
+                    case LANDSCAPER:         runLandscaper();        break;
 //                    case DELIVERY_DRONE:     runDeliveryDrone();     break;
 //                    case NET_GUN:            runNetGun();            break;
                 }
@@ -225,6 +225,12 @@ public strictfp class RobotPlayer {
                             soupLocations.remove(loc1);
                             System.out.println("Removed soup location");
                             break;
+                        case 4:
+                            MapLocation location2 = new MapLocation(mes[2], mes[3]);
+                            landscaperLocations.add(location2);
+                            numLandscapers++;
+                            System.out.println("New Design School");
+                            break;
                     }
                 }
             }
@@ -275,13 +281,43 @@ public strictfp class RobotPlayer {
                 }
             }
         }
+        else if(numLandscapers<maxLandscapers && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5){
+            /*
+            Here we build a landscaper
+             */
+            System.out.println("Current landscapers: "+numLandscapers +" max: "+maxLandscapers);
+            if(!inRadius(rc.getLocation(), HQLocation, 3)){
+                Direction d = rc.getLocation().directionTo(HQLocation);
+                if(tryMove(d)){
+                    System.out.println("moved");
+                }
+                else if(tryAltMoves(d)){
+                    System.out.println("moved alty");
+                }
+                else{
+                    System.out.println("completely blocked");
+                }
+            }
+            else{
+                Direction d = oppositeLocation(rc.getLocation().directionTo(HQLocation));
+                if(tryBuild(RobotType.DESIGN_SCHOOL, d)){
+                    System.out.println("built design school");
+                    RobotInfo[] robots = rc.senseNearbyRobots();
+                    for(RobotInfo robot : robots){
+                        if(robot.getType()==RobotType.DESIGN_SCHOOL){
+                            MapLocation location = robot.getLocation();
+                            int[] message = {comms.teamId, 4, location.x, location.y, 0,0,0};
+                            rc.submitTransaction(message, 5);
+                        }
+                    }
+                }
+            }
+
+        }
         else if(souplocation.length>10 && !inRadius(HQLocation, rc.getLocation(), 6) && !byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
             /*
             Here is where we build the refinery.
-            it currently isn't being called
-            because the first if always executes over this loop
              */
-            System.out.println("steps away"+stepsAwayFromHQ);
             //needs to find a refinery or HQ
             boolean refineryPlaced = false;
             //we are close to the HQ.
@@ -557,6 +593,29 @@ public strictfp class RobotPlayer {
 
     }
 
+    static Direction oppositeLocation(Direction d){
+        Direction newDirection = randomDirection();
+        switch (d){
+            case EAST:
+                return Direction.WEST;
+            case WEST:
+                return Direction.EAST;
+            case NORTH:
+                return Direction.SOUTH;
+            case SOUTH:
+                return Direction.NORTH;
+            case NORTHEAST:
+                return Direction.SOUTHWEST;
+            case NORTHWEST:
+                return Direction.SOUTHEAST;
+            case SOUTHEAST:
+                return Direction.NORTHWEST;
+            case SOUTHWEST:
+                return Direction.NORTHEAST;
+        }
+        return newDirection;
+    }
+
     static MapLocation findNearestLocation(MapLocation[] locations){
         int count = 0;
         MapLocation closest = new MapLocation(1,1);
@@ -602,7 +661,6 @@ public strictfp class RobotPlayer {
     static boolean tryAltMoves(Direction d) throws GameActionException {
         boolean flip = (rc.getRoundNum()%2==0);
         boolean moved = false;
-        System.out.println("choice: "+flip);
         switch(d) {
             case EAST:
                 if (flip) {
@@ -688,16 +746,11 @@ public strictfp class RobotPlayer {
                     if (tryMove(Direction.SOUTH)) {
                         System.out.println("moved south");
                         moved = true;
-                    }else{
-                        System.out.println("tried south");
                     }
                 } else {
                     if (tryMove(Direction.EAST)) {
                         System.out.println("moved east");
                         moved = true;
-                    }
-                    else{
-                        System.out.println("tried east");
                     }
                 }
                 return moved;
@@ -869,6 +922,6 @@ public strictfp class RobotPlayer {
 class Communications {
     public Communications(){}
     public int teamId = 5682394;
-    public String[] messageType = {"HQ Location", "Refinery Location", "Add Soup Location", "Remove Soup Location"};
+    public String[] messageType = {"HQ Location", "Refinery Location", "Add Soup Location", "Remove Soup Location", "New Design School"};
 }
 
