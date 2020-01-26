@@ -675,4 +675,3 @@ class Communications {
     public int teamId = 5682394;
     public String[] messageType = {"HQ Location", "Refinery Location", "Soup Location"};
 }
-

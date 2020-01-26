@@ -28,7 +28,6 @@ public class RobotPlayer {
 
     static int turnCount;
     static int numMiners = 0;
-    static int refineries=0;
     static MapLocation hqLoc;
 
     public static void run(RobotController rc) throws GameActionException {
@@ -101,7 +100,7 @@ public class RobotPlayer {
             if(goTo(depositloc))
                 System.out.println("moved towards "+depositloc);
         } else if (soupLocations.size() > 0) {
-               goTo(soupLocations.get(0));
+            goTo(soupLocations.get(0));
         } else if (goTo(randomDirection())) {
             System.out.println("I moved randomly!");
         }
@@ -147,12 +146,12 @@ public class RobotPlayer {
 
     private static void runHQ() throws GameActionException {
 
-            for (Direction dir : directions)
-                if(numMiners < 10) {
+        for (Direction dir : directions)
+            if(numMiners < 10) {
                 if(tryBuild(RobotType.MINER, dir)){
                     numMiners++;
                 }
-        }
+            }
 
     }
 
