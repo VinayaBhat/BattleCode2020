@@ -1,5 +1,6 @@
 package colin;
 import battlecode.common.*;
+import player10pdx.HQ;
 import player10pdx.Robot;
 
 import java.util.ArrayList;
@@ -157,7 +158,8 @@ public strictfp class RobotPlayer {
 
             //loop through messages from our team
             for(int[] mes : messages){
-                //System.out.printf("Mes Type: "+mes[1]+" x: "+mes[2]+" y:"+mes[3]);
+                //messages is initialized with all -1
+                //so if there is a -1 it is the end
                 if(mes[0]==-1){
                     System.out.println("end of messages");
                     break;
@@ -203,18 +205,24 @@ public strictfp class RobotPlayer {
         if(rc.getSoupCarrying()==RobotType.MINER.soupLimit) {
             //deposit to HQ
             Direction d = rc.getLocation().directionTo(HQLocation);
-            if (tryMove(d)) {
-                System.out.println("moved to HQ");
-            } else if(tryAltMoves(d)){
-
+            if(inRadius(HQLocation, rc.getLocation(), 1)){
+                if(tryMine(d)){
+                    System.out.println("mined");
+                }
+                else{
+                    System.out.println("by HQ, can't mine");
+                }
             }
             else{
-                if (tryRefine(d)) {
-                    System.out.println("refined");
+                if(tryMove(d)){
+                    System.out.println("moving to HQ");
+                }
+                else{
+                    System.out.println("something is blocking me");
                 }
             }
         }
-        else if(rc.getSoupCarrying()==RobotType.MINER.soupLimit && rc.getTeamSoup()>210){
+        else if(souplocation.length>5 && !inRadius(HQLocation, rc.getLocation(), 6) && !byRobot(RobotType.REFINERY)){
             /*
             Here is where we build the refinery.
             it currently isn't being called
@@ -294,7 +302,7 @@ public strictfp class RobotPlayer {
                         if(robot.type == RobotType.REFINERY){
                             MapLocation location = robot.getLocation();
                             int[] refineryLocationTransaction = {comms.teamId, 1, location.x, location.y, 0, 0, 0};
-                            rc.submitTransaction(refineryLocationTransaction, 10);
+                            rc.submitTransaction(refineryLocationTransaction, 20);
                         }
                     }
                 }
@@ -490,6 +498,27 @@ public strictfp class RobotPlayer {
     static void runNetGun() throws GameActionException {
 
     }
+
+    static boolean moveToHQ() throws GameActionException {
+        boolean moved = false;
+        Direction d = rc.getLocation().directionTo(HQLocation);
+        if(tryMove(d)){
+            moved = true;
+        }
+        return moved;
+    }
+
+    static boolean byRobot(RobotType type){
+        boolean found = false;
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for(RobotInfo robot : robots){
+            if(robot.getType()==type){
+                found = true;
+            }
+        }
+        return found;
+    }
+
 
     static boolean tryAltMoves(Direction d) throws GameActionException {
         Random random = new Random();
