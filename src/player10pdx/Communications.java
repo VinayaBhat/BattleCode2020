@@ -11,10 +11,10 @@ public class Communications {
     static final int teamSecret = 444444444;
     // the second entry in every message tells us what kind of message it is. e.g. 0 means it contains the HQ location
     static final String[] messageType = {
-        "HQ loc",
-        "design school created",
-        "soup location",
-         "refinery created"
+            "HQ loc",
+            "design school created",
+            "soup location",
+            "refinery created"
     };
 
     public Communications(RobotController r) {
@@ -45,6 +45,7 @@ public class Communications {
     }
 
     public boolean broadcastedCreation = false;
+
     public void broadcastDesignSchoolCreation(MapLocation loc) throws GameActionException {
         if(broadcastedCreation) return; // don't re-broadcast
 
@@ -71,7 +72,6 @@ public class Communications {
         }
         return count;
     }
-
     public void broadcastSoupLocation(MapLocation loc ) throws GameActionException {
         int[] message = new int[7];
         message[0] = teamSecret;
@@ -88,9 +88,12 @@ public class Communications {
         for(Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
             int[] mess = tx.getMessage();
             if(mess[0] == teamSecret && mess[1] == 2){
-                // TODO: don't add duplicate locations
+                MapLocation double_checker = new MapLocation(mess[2], mess[3]);
                 System.out.println("heard about a tasty new soup location");
-                soupLocations.add(new MapLocation(mess[2], mess[3]));
+                if(!soupLocations.contains(double_checker)){
+                soupLocations.add(double_checker);
+                }
+                else{double_checker = null;}
             }
         }
     }

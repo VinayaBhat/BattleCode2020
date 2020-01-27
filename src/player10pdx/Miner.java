@@ -20,7 +20,7 @@ public class Miner extends Unit {
         comms.updateSoupLocations(soupLocations);
         checkIfSoupGone();
 
-        for (Direction dir : Util.directions)
+        for (Direction dir : Util.directions) {
             if (tryMine(dir)) {
                 System.out.println("I mined soup! " + rc.getSoupCarrying());
                 MapLocation soupLoc = rc.getLocation().add(dir);
@@ -28,19 +28,24 @@ public class Miner extends Unit {
                     comms.broadcastSoupLocation(soupLoc);
                 }
             }
+        }
         // mine first, then when full, deposit
         for (Direction dir : Util.directions)
             if (tryRefine(dir))
                 System.out.println("I refined soup! " + rc.getTeamSoup());
 
-        if (numRefineries < 3){
-            if(tryBuild(RobotType.REFINERY, Util.randomDirection()))
+        if (numRefineries == 0 || ((0 < numRefineries && numRefineries < 3)  && numDesignSchools == 2)){
+            if(rc.canBuildRobot(RobotType.REFINERY, Util.randomDirection())){
+                rc.buildRobot(RobotType.REFINERY, Util.randomDirection());
                 numRefineries += 1;
-                System.out.println("created a refinery dawg! now we have" + numRefineries + " of them!");
+                System.out.println("created a refinery. it is number " + numDesignSchools);
+            }
+
+
         }
 
-        if (numDesignSchools < 3){
-           if(tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
+        if ((numRefineries > 0 && numRefineries < 2) && numDesignSchools < 3){
+            if(tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
                 System.out.println("created a design school. it is number " + numDesignSchools);
         }
 

@@ -10,6 +10,7 @@ public class Refinery extends Building {
         super.takeTurn();
 
         // will only actually happen if we haven't already broadcasted the creation
+        RobotType refinery = rc.getType();
         comms.broadcastRefineryCreation(rc.getLocation());
     }
 }
