@@ -6,17 +6,18 @@ public class Miner extends Unit {
 
     int numDesignSchools = 0;
     int numRefineries = 0;
+    int current_total = 0;
+    int round_check = 1;
     ArrayList<MapLocation> soupLocations = new ArrayList<MapLocation>();
-
     public Miner(RobotController r) {
         super(r);
     }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-
-        numRefineries += comms.getNewRefineryCount();
-        numDesignSchools += comms.getNewDesignSchoolCount();
+        MapLocation garbage = new MapLocation(rc.getRoundNum(),rc.getRoundNum());
+        numRefineries += comms.getnewBuildingCount( 3);
+        numDesignSchools += comms.getnewBuildingCount(1);
         comms.updateSoupLocations(soupLocations);
         checkIfSoupGone();
 
@@ -32,7 +33,7 @@ public class Miner extends Unit {
         // mine first, then when full, deposit
         for (Direction dir : Util.directions)
             if (tryRefine(dir))
-                System.out.println("I refined soup! " + rc.getTeamSoup());
+               System.out.println("I refined soup! " + rc.getTeamSoup());
 
         if (numRefineries == 0 || ((0 < numRefineries && numRefineries < 3)  && numDesignSchools == 2)){
             if(rc.canBuildRobot(RobotType.REFINERY, Util.randomDirection())){
@@ -46,7 +47,7 @@ public class Miner extends Unit {
 
         if ((numRefineries > 0 && numRefineries < 2) && numDesignSchools < 3){
             if(tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
-                System.out.println("created a design school. it is number " + numDesignSchools);
+               System.out.println("created a design school. it is number " + numDesignSchools);
         }
 
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
@@ -58,7 +59,7 @@ public class Miner extends Unit {
             rc.setIndicatorLine(rc.getLocation(), soupLocations.get(0), 255, 255, 0);
         } else if (nav.goTo(Util.randomDirection())) {
             // otherwise, move randomly as usual
-            System.out.println("I moved randomly!");
+           System.out.println("I moved randomly!");
         }
     }
 

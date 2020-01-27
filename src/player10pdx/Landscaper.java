@@ -6,10 +6,10 @@ public class Landscaper extends Unit {
     public Landscaper(RobotController r) {
         super(r);
     }
-
+    int round_check = 1;
+    int current_total = 0;
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-
         // first, save HQ by trying to remove dirt from it
         if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
             Direction dirtohq = rc.getLocation().directionTo(hqLoc);

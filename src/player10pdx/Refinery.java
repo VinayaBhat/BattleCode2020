@@ -11,6 +11,6 @@ public class Refinery extends Building {
 
         // will only actually happen if we haven't already broadcasted the creation
         RobotType refinery = rc.getType();
-        comms.broadcastRefineryCreation(rc.getLocation());
+        comms.broadcastCreation(rc.getLocation(), 3);
     }
 }

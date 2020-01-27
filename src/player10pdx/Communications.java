@@ -32,10 +32,10 @@ public class Communications {
     }
 
     public MapLocation getHqLocFromBlockchain() throws GameActionException {
-        for (int i = 1; i < rc.getRoundNum(); i++){
-            for(Transaction tx : rc.getBlock(i)) {
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
-                if(mess[0] == teamSecret && mess[1] == 0){
+                if (mess[0] == teamSecret && mess[1] == 0) {
                     System.out.println("found the HQ!");
                     return new MapLocation(mess[2], mess[3]);
                 }
@@ -44,35 +44,36 @@ public class Communications {
         return null;
     }
 
-    public boolean broadcastedCreation = false;
+    public boolean[] broadcastedCreation = new boolean[4];
 
-    public void broadcastDesignSchoolCreation(MapLocation loc) throws GameActionException {
-        if(broadcastedCreation) return; // don't re-broadcast
-
-        int[] message = new int[7];
-        message[0] = teamSecret;
-        message[1] = 1;
-        message[2] = loc.x; // x coord of HQ
-        message[3] = loc.y; // y coord of HQ
-        if (rc.canSubmitTransaction(message, 3)) {
-            rc.submitTransaction(message, 3);
-            broadcastedCreation = true;
+    public void broadcastCreation(MapLocation loc, int cue) throws GameActionException {
+        if (broadcastedCreation[cue]) return; // don't re-broadcast
+        {
+            int[] message = new int[7];
+            message[0] = teamSecret;
+            message[1] = cue;
+            message[2] = loc.x; // x coord of HQ
+            message[3] = loc.y; // y coord of HQ
+            if (rc.canSubmitTransaction(message, 1)) {
+                rc.submitTransaction(message, 1);
+                broadcastedCreation[cue] = true;
+            }
         }
     }
 
     // check the latest block for unit creation messages
-    public int getNewDesignSchoolCount() throws GameActionException {
+    public int getnewBuildingCount(int cue) throws GameActionException {
         int count = 0;
-        for(Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
-            int[] mess = tx.getMessage();
-            if(mess[0] == teamSecret && mess[1] == 1){
-                System.out.println("heard about a cool new school");
-                count += 1;
+            for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == cue) {
+                    count += 1;
+                }
             }
-        }
         return count;
     }
-    public void broadcastSoupLocation(MapLocation loc ) throws GameActionException {
+
+    public void broadcastSoupLocation(MapLocation loc) throws GameActionException {
         int[] message = new int[7];
         message[0] = teamSecret;
         message[1] = 2;
@@ -85,43 +86,16 @@ public class Communications {
     }
 
     public void updateSoupLocations(ArrayList<MapLocation> soupLocations) throws GameActionException {
-        for(Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
             int[] mess = tx.getMessage();
-            if(mess[0] == teamSecret && mess[1] == 2){
+            if (mess[0] == teamSecret && mess[1] == 2) {
                 MapLocation double_checker = new MapLocation(mess[2], mess[3]);
                 System.out.println("heard about a tasty new soup location");
-                if(!soupLocations.contains(double_checker)){
-                soupLocations.add(double_checker);
+                if (!soupLocations.contains(double_checker)) {
+                    soupLocations.add(double_checker);
                 }
-                else{double_checker = null;}
             }
         }
-    }
-
-
-    public boolean broadcastedRefineryCreation = false;
-    public void broadcastRefineryCreation(MapLocation loc) throws GameActionException {
-        if(broadcastedRefineryCreation) return; // don't re-broadcast
-
-        int[] message = new int[7];
-        message[0] = teamSecret;
-        message[1] = 3;
-        message[2] = loc.x; // x coord of HQ
-        message[3] = loc.y; // y coord of HQ
-        if (rc.canSubmitTransaction(message, 3)) {
-            rc.submitTransaction(message, 3);
-            broadcastedRefineryCreation = true;
-        }
-    }
-    public int getNewRefineryCount() throws GameActionException {
-        int refinery_count = 0;
-        for(Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
-            int[] mess = tx.getMessage();
-            if(mess[0] == teamSecret && mess[1] == 3){
-                System.out.println("heard about a cool new refinery");
-                refinery_count += 1;
-            }
-        }
-        return refinery_count;
     }
 }
+
