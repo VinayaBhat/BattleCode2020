@@ -111,8 +111,10 @@ public class Communications {
                 {-1,-1,-1,-1,-1,-1,-1}};
 
         int count = 0;
+        System.out.println("Transactions: ");
         for(Transaction transaction : transactions){
             int[] message = transaction.getMessage();
+            System.out.println("  "+transaction);
             if(message[0]==teamId){
                 System.out.println("found one");
                 allMessages[count] = message;

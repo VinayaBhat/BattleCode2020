@@ -42,7 +42,7 @@ public class DesignSchool extends Building {
                 if(tryBuild(RobotType.LANDSCAPER, openDirections[i])){
                     //submit transaction for HQ to broadcast its location
                     int[] message = {comms.teamId, 5, 0, 0, 0, 0, 0};
-                    rc.submitTransaction(message, 2);
+                    rc.submitTransaction(message, 4);
                     System.out.println("built landscaper "+openDirections[i]);
                 }
             }

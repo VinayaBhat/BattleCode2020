@@ -1,6 +1,7 @@
 package colin;
 import battlecode.common.*;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class Miner extends Unit {
 
@@ -21,6 +22,7 @@ public class Miner extends Unit {
     static ArrayList<MapLocation> soupLocations = new ArrayList<>();
     static int numDesignSchools = 0;
     static int maxDesignSchools = 1;
+    static int numLandscapers = 0;
 
     public Miner(RobotController r){
         super(r);
@@ -63,50 +65,49 @@ public class Miner extends Unit {
         If its not the first round then get the block
         and deal with the messages in the block
          */
-        if(rc.getRoundNum()>0){
-            int[][] messages = comms.findTeamMessagesInBlockChain();
+        int[][] messages = comms.findTeamMessagesInBlockChain();
 
-            //loop through messages from our team
-            for(int[] mes : messages){
-                //messages is initialized with all -1
-                //so if there is a -1 it is the end
-                if(mes[0]==-1){
-                    System.out.println("end of messages");
-                    break;
-                }else{
-                    switch(mes[1]){
-                        case 0:
-                            //message about the HQ location
-                            System.out.println("HQ Location: x:"+ mes[2]+" y:"+mes[3]);
-                            break;
-                        case 1:
-                            //message about the refinery location
-                            refineries[numRefineries][0] = mes[2];
-                            refineries[numRefineries][1] = mes[3];
-                            numRefineries++;
-                            System.out.println("Refinery Location: x:"+ mes[2]+" y:"+mes[3]);
-                            break;
-                        case 2:
-                            //message about soup location
-                            MapLocation loc = new MapLocation(mes[2], mes[3]);
-                            if(!soupLocations.contains(loc)){
-                                System.out.println("new location");
-                                soupLocations.add(loc);
-                            }
-                            //System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
-                            break;
-                        case 3:
-                            MapLocation loc1 = new MapLocation(mes[2], mes[3]);
-                            soupLocations.remove(loc1);
-                            System.out.println("Removed soup location");
-                            break;
-                        case 4:
-                            numDesignSchools++;
-                            System.out.println("New Design School num: "+numDesignSchools);
-                            break;
-                        case 5:
-                            System.out.println("New Landscaper");
-                    }
+        //loop through messages from our team
+        for(int[] mes : messages){
+            //messages is initialized with all -1
+            //so if there is a -1 it is the end
+            if(mes[0]==-1){
+                System.out.println("end of messages");
+                break;
+            }else{
+                switch(mes[1]){
+                    case 0:
+                        //message about the HQ location
+                        System.out.println("HQ Location: x:"+ mes[2]+" y:"+mes[3]);
+                        break;
+                    case 1:
+                        //message about the refinery location
+                        refineries[numRefineries][0] = mes[2];
+                        refineries[numRefineries][1] = mes[3];
+                        numRefineries++;
+                        System.out.println("Refinery Location: x:"+ mes[2]+" y:"+mes[3]);
+                        break;
+                    case 2:
+                        //message about soup location
+                        MapLocation loc = new MapLocation(mes[2], mes[3]);
+                        if(!soupLocations.contains(loc)){
+                            System.out.println("new location");
+                            soupLocations.add(loc);
+                        }
+                        //System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
+                        break;
+                    case 3:
+                        MapLocation loc1 = new MapLocation(mes[2], mes[3]);
+                        soupLocations.remove(loc1);
+                        System.out.println("Removed soup location");
+                        break;
+                    case 4:
+                        numDesignSchools++;
+                        System.out.println("New Design School num: "+numDesignSchools);
+                        break;
+                    case 5:
+                        numLandscapers++;
+                        System.out.println("New Landscaper");
                 }
             }
         }
@@ -120,13 +121,26 @@ public class Miner extends Unit {
         */
         if(rc.getSoupCarrying()==RobotType.MINER.soupLimit) {
             //find the closest deposit location
-            int size = numRefineries+1;
-            MapLocation[] locations = new MapLocation[size];
-            locations[0] = HQLocation;
-            for(int i = 1; i<size; i++){
-                MapLocation newLocation = new MapLocation(refineries[i-1][0],refineries[i-1][1]);
-                System.out.println("adding "+newLocation);
-                locations[i] = newLocation;
+            MapLocation[] locations;
+            if(numLandscapers<1){
+                System.out.println("Before landscapers");
+                int size = numRefineries+1;
+                locations = new MapLocation[size];
+                locations[0] = HQLocation;
+                for(int i = 1; i<size; i++){
+                    MapLocation newLocation = new MapLocation(refineries[i-1][0],refineries[i-1][1]);
+                    System.out.println("adding "+newLocation);
+                    locations[i] = newLocation;
+                }
+            }
+            else {
+                System.out.println("After landscapers");
+                locations = new MapLocation[numRefineries];
+                for(int i = 0; i<numRefineries; i++){
+                    MapLocation newLocation = new MapLocation(refineries[i][0], refineries[i][1]);
+                    System.out.println("adding "+newLocation);
+                    locations[i] = newLocation;
+                }
             }
 
             //find the direction
@@ -155,7 +169,7 @@ public class Miner extends Unit {
                 }
             }
         }
-        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL)){
+        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && numRefineries>0){
             /*
             Here we build a landscaper
              */
@@ -188,7 +202,7 @@ public class Miner extends Unit {
             }
 
         }
-        else if(souplocation.length>10 && !nav.inRadius(HQLocation, rc.getLocation(), 6) && !nav.byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
+        else if(souplocation.length>6 && !nav.inRadius(HQLocation, rc.getLocation(), 6) && !nav.byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
             /*
             Here is where we build the refinery.
              */

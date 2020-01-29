@@ -8,8 +8,7 @@ public class Landscaper extends Unit {
     public Landscaper(RobotController r) {
         super(r);
     }
-    int round_check = 1;
-    int current_total = 0;
+
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         //get the block and the team messages on it
