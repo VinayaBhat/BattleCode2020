@@ -1,6 +1,8 @@
 package teamplayer;
 
 import battlecode.common.*;
+import player10pdx.Robot;
+import player10pdx.Util;
 
 
 import java.util.ArrayList;
@@ -29,6 +31,9 @@ public class RobotPlayer {
     static int turnCount;
     static int numMiners = 0;
     static MapLocation hqLoc;
+    static int landscapers=0;
+
+    private static boolean broadcastedCreation=false;
 
     public static void run(RobotController rc) throws GameActionException {
         RobotPlayer.rc = rc;
@@ -47,6 +52,10 @@ public class RobotPlayer {
                     case MINER:
                         runMiner();
                         break;
+                    case DESIGN_SCHOOL:
+                        runDesignSchool();
+                        break;
+                    case LANDSCAPER:         runLandscaper();        break;
 
 
                 }
@@ -59,6 +68,92 @@ public class RobotPlayer {
             }
         }
     }
+
+    private static void runLandscaper() throws GameActionException {
+        if(hqLoc==null){
+            findHQ();
+        }
+        // first, save HQ by trying to remove dirt from it
+        if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
+            Direction dirtohq = rc.getLocation().directionTo(hqLoc);
+            if(rc.canDigDirt(dirtohq)){
+                rc.digDirt(dirtohq);
+                System.out.println("Dug dirt from HQ");
+            }
+        }
+        if(rc.getDirtCarrying() == 0){
+            tryDig();
+        }
+
+        MapLocation bestPlaceToBuildWall = null;
+        // find best place to build
+        if(hqLoc != null) {
+            int lowestElevation = 9999999;
+            for (Direction dir : directions) {
+                boolean build=true;
+                MapLocation tileToCheck = hqLoc.add(dir);
+                RobotInfo[] ri=rc.senseNearbyRobots();
+                for(RobotInfo r:ri){
+                    if(r.type== RobotType.MINER){
+                        build=false;
+                    }
+                }
+
+                if(build && rc.getLocation().distanceSquaredTo(tileToCheck) < 9
+                        && rc.canDepositDirt(rc.getLocation().directionTo(tileToCheck))) {
+                    if (rc.senseElevation(tileToCheck) < lowestElevation) {
+                        lowestElevation = rc.senseElevation(tileToCheck);
+                        bestPlaceToBuildWall = tileToCheck;
+                    }
+                }
+            }
+        }
+
+        //if (Math.random() < 0.8){
+            // build the wall
+            if (bestPlaceToBuildWall != null) {
+                rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
+                rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
+                System.out.println("building a wall");
+
+            }
+        //}
+
+        // otherwise try to get to the hq
+        if(hqLoc != null){
+            goTo(hqLoc);
+        } else {
+            goTo(randomDirection());
+        }
+    }
+
+    private static boolean tryDig() throws GameActionException {
+        Direction dir;
+        if(hqLoc == null){
+            dir = randomDirection();
+        } else {
+            dir = hqLoc.directionTo(rc.getLocation());
+        }
+        if(rc.canDigDirt(dir)){
+            rc.digDirt(dir);
+            rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
+            return true;
+        }
+        return false;
+    }
+
+      
+
+
+    private static void runDesignSchool() throws GameActionException {
+        if(landscapers<3){
+        for(Direction dir:directions){
+            if(tryBuild(RobotType.LANDSCAPER,dir)) {
+                System.out.println("Built Landscaper");
+                landscapers++;
+            }
+            }
+        }}
 
 
 
@@ -77,15 +172,56 @@ public class RobotPlayer {
                     broadcastSoupLocation(soupLoc);
                 }
             }
+        if(refineryLocations.size()==0){
+        updaterefineryLocations();
+        if(rc.getTeamSoup()>200){
+            if(refineryLocations.size()<3) {
+                RobotInfo[] ri = rc.senseNearbyRobots();
+                boolean builrefinery = true;
+                for (RobotInfo r : ri) {
+                    if (r.type == RobotType.HQ || r.type == RobotType.REFINERY || rc.senseNearbySoup().length==0 ) {
+                        builrefinery = false;
+                    }
+                }
+                if(builrefinery){
+                    Direction rd=randomDirection();
+                    if(tryBuild(RobotType.REFINERY,rd)){
+                        System.out.println("Refinery built "+rd);
+                        RobotInfo[] r=rc.senseNearbyRobots();
+                        for(RobotInfo rb:r){
+                            if(rb.type==RobotType.REFINERY){
+                                refineryLocations.add(rb.location);
+                                broadcastRefineryLocation(rb.location);
+                            }
+                        }
+                    }
+                }
+            }
+        }}else {
+            boolean detectdesignschools = designschoolsnearby();
+            if (getNewDesignSchoolCount() < 3) {
+                if (detectdesignschools) {
+                    if (tryBuild(RobotType.DESIGN_SCHOOL, randomDirection())) {
+                        System.out.println("Built design school");
+                        RobotInfo[] r = rc.senseNearbyRobots();
+                        for (RobotInfo rb : r) {
+                            if (rb.type == RobotType.DESIGN_SCHOOL) {
+                                broadcastDesignSchoolCreation(rb.location);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
         // mine first, then when full, deposit
         for (Direction dir : directions)
             if (tryRefine(dir))
                 System.out.println("I refined soup! " + rc.getTeamSoup());
 
-//        if (numDesignSchools < 3){
-//            if(tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
-//                System.out.println("created a design school");
-//        }
+
 
 
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
@@ -104,31 +240,18 @@ public class RobotPlayer {
         } else if (goTo(randomDirection())) {
             System.out.println("I moved randomly!");
         }
-        updaterefineryLocations();
-        if(rc.getTeamSoup()>200){
-            if(refineryLocations.size()<3) {
-                RobotInfo[] ri = rc.senseNearbyRobots();
-                boolean builrefinery = true;
-                for (RobotInfo r : ri) {
-                    if (r.type == RobotType.HQ || r.type == RobotType.REFINERY || rc.senseNearbySoup().length==0 ) {
-                        builrefinery = false;
-                    }
-                }
-                if(builrefinery){
-                    Direction rd=randomDirection();
-                    if(tryBuild(RobotType.REFINERY,rd)){
-                        System.out.println("Refinery built "+rd);
-                        RobotInfo[] r=rc.senseNearbyRobots();
-                        for(RobotInfo rb:r){
-                            if(rb.type==RobotType.REFINERY){
-                                broadcastRefineryLocation(rb.location);
-                            }
-                        }
-                    }
-                }
+
+
+    }
+
+    private static boolean designschoolsnearby() {
+        RobotInfo[] ri=rc.senseNearbyRobots();
+        for(RobotInfo ds:ri){
+            if(ds.type==RobotType.DESIGN_SCHOOL || ds.type==RobotType.HQ){
+                return false;
             }
         }
-
+        return true;
     }
 
     private static void broadcastRefineryLocation(MapLocation loc) throws GameActionException {
@@ -137,8 +260,8 @@ public class RobotPlayer {
         message[1] = 3;
         message[2] = loc.x; // x coord of HQ
         message[3] = loc.y; // y coord of HQ
-        if (rc.canSubmitTransaction(message, 3)) {
-            rc.submitTransaction(message, 3);
+        if (rc.canSubmitTransaction(message, 1)) {
+            rc.submitTransaction(message, 1);
             System.out.println("new refinery!" + loc);
         }
     }
@@ -163,8 +286,8 @@ public class RobotPlayer {
         message[1] = -1;
         message[2] = loc.x; // x coord of HQ
         message[3] = loc.y; // y coord of HQ
-        if (rc.canSubmitTransaction(message, 3))
-            rc.submitTransaction(message, 3);
+        if (rc.canSubmitTransaction(message, 4))
+            rc.submitTransaction(message, 4);
     }
 
     public static MapLocation getHqLocFromBlockchain() throws GameActionException {
@@ -180,8 +303,7 @@ public class RobotPlayer {
         return null;
     }
 
-    public boolean broadcastedCreation = false;
-    public void broadcastDesignSchoolCreation(MapLocation loc) throws GameActionException {
+    public static void broadcastDesignSchoolCreation(MapLocation loc) throws GameActionException {
         if(broadcastedCreation) return; // don't re-broadcast
 
         int[] message = new int[7];
@@ -189,14 +311,14 @@ public class RobotPlayer {
         message[1] = 1;
         message[2] = loc.x; // x coord of HQ
         message[3] = loc.y; // y coord of HQ
-        if (rc.canSubmitTransaction(message, 3)) {
-            rc.submitTransaction(message, 3);
+        if (rc.canSubmitTransaction(message, 4)) {
+            rc.submitTransaction(message, 4);
             broadcastedCreation = true;
         }
     }
 
     // check the latest block for unit creation messages
-    public int getNewDesignSchoolCount() throws GameActionException {
+    public static int getNewDesignSchoolCount() throws GameActionException {
         int count = 0;
         for(Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
             int[] mess = tx.getMessage();
@@ -326,4 +448,5 @@ public class RobotPlayer {
     static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
     }
+
 }
