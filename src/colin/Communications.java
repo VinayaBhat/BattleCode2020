@@ -9,13 +9,17 @@ public class Communications {
     // state related only to communications should go here
 
     // all messages from our team should start with this so we can tell them apart
-    static final int teamId = 444444444;
+    static final int teamId = 5432830;
     // the second entry in every message tells us what kind of message it is. e.g. 0 means it contains the HQ location
     static final String[] messageType = {
             "HQ loc",
-            "design school created",
-            "soup location",
-            "refinery created"
+            "Refinery Location",
+            "Soup location",
+            "Remove Soup Location",
+            "New Design School",
+            "New Landscaper",
+            "Landscaper Message",
+            "Landscaper Role Message"
     };
 
     public Communications(RobotController r) {
@@ -114,7 +118,7 @@ public class Communications {
         System.out.println("Transactions: ");
         for(Transaction transaction : transactions){
             int[] message = transaction.getMessage();
-            System.out.println("  "+transaction);
+            System.out.println("  "+transaction.getSerializedMessage());
             if(message[0]==teamId){
                 System.out.println("found one");
                 allMessages[count] = message;

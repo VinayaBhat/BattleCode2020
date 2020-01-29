@@ -1,19 +1,55 @@
 package colin;
 import battlecode.common.*;
-import colin.Unit;
-import colin.Util;
+
+import java.util.Map;
 
 public class Landscaper extends Unit {
+
+    int totalNumLandscapers = 0;
+    boolean transmittedLocation = false;
+    int role = 0;
 
     public Landscaper(RobotController r) {
         super(r);
     }
-
+    /*
+            The landscaper is broken into main code and phase code.
+            Main code:
+                -Run by all landscapers
+                -Run before phase code
+            Phase code;
+                -Situation dependent code
+                -All changes should be done in main
+    */
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        //first run the main code
+        main();
+
+        switch (role){
+            case 0:
+                mainLandscapers();
+                break;
+            case 1:
+                secondaryLandscapers();
+                break;
+        }
+    }
+
+    void main() throws GameActionException{
+        System.out.println("ID: "+rc.getID());
+        MapLocation myLocation = rc.getLocation();
+        if(!transmittedLocation && rc.getTeamSoup()>5){
+            System.out.println("submitted location");
+            int[] message = {comms.teamId, 6, myLocation.x, myLocation.y, rc.getID(), 0, 0};
+            rc.submitTransaction(message, 3);
+            transmittedLocation = true;
+        }
+
         //get the block and the team messages on it
         int[][] teamMessages = comms.findTeamMessagesInBlockChain();
 
+        //deal with team messages
         for(int[] message : teamMessages){
             //messages is initialized with all -1
             //so if there is a -1 it is the end
@@ -45,11 +81,26 @@ public class Landscaper extends Unit {
                         break;
                     case 5:
                         //another landscaper
+                        totalNumLandscapers = message[2];
                         System.out.println("New Landscaper");
+                    case 6:
+                        System.out.println("Landscaper Message");
+                        break;
+                    case 7:
+                        System.out.println("Landscaper Role Message");
+                        System.out.println("id: "+message[2]+" role: "+message[3]);
+                        if(rc.getID()==message[2]){
+                            role = message[3];
+                        }
+                        break;
                 }
             }
         }
-
+    }
+    /*
+    This phase is when the main landscapers are being made
+     */
+    void mainLandscapers() throws GameActionException{
         // first, save HQ by trying to remove dirt from it
         if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
             Direction dirtohq = rc.getLocation().directionTo(hqLoc);
@@ -101,6 +152,16 @@ public class Landscaper extends Unit {
         }
     }
 
+    void secondaryLandscapers() throws GameActionException {
+        if(role==0){
+            mainLandscapers();
+        }
+        else if(role==1){
+            //do stuff
+            System.out.println("I'm a secondary");
+        }
+    }
+
     boolean tryDig() throws GameActionException {
         Direction dir;
         if(hqLoc == null){
@@ -110,9 +171,11 @@ public class Landscaper extends Unit {
         }
         if(rc.canDigDirt(dir)){
             rc.digDirt(dir);
-            rc.setIndicatorDot(rc.getLocation().add(dir), 255, 0, 0);
             return true;
         }
         return false;
     }
+
+
+
 }

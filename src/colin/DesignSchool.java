@@ -12,14 +12,15 @@ public class DesignSchool extends Building {
     }
 
     static int totalnumLandscapers = 0;
+    static int maxLandscapers = 10;
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+
         /*
         First turn find all the open directions
         to place a landscaper
          */
-        System.out.println("t soup: "+rc.getTeamSoup()+" soup: "+rc.getSoupCarrying());
         int numOpen = 0;
         Direction[] openDirections = {null, null, null, null, null, null, null, null};
 
@@ -35,13 +36,14 @@ public class DesignSchool extends Building {
             }
         }
 
-        System.out.println("num open: "+numOpen);
         for(int i = 0; i<numOpen; i++){
             System.out.println("I: "+i+"\n"+"NumOpenDir: "+numOpen);
-            if(rc.getTeamSoup()>150){
+            if(rc.getTeamSoup()>150 && totalnumLandscapers<maxLandscapers){
                 if(tryBuild(RobotType.LANDSCAPER, openDirections[i])){
                     //submit transaction for HQ to broadcast its location
-                    int[] message = {comms.teamId, 5, 0, 0, 0, 0, 0};
+                    totalnumLandscapers++;
+
+                    int[] message = {comms.teamId, 5, totalnumLandscapers, 0, 0, 0, 0};
                     rc.submitTransaction(message, 4);
                     System.out.println("built landscaper "+openDirections[i]);
                 }

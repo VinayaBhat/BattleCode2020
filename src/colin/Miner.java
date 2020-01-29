@@ -36,7 +36,7 @@ public class Miner extends Unit {
     }
 
     public void takeTurn() throws GameActionException {
-        System.out.println("soup carrying: "+rc.getSoupCarrying());
+        System.out.println("ID: "+rc.getID()+"soup carrying: "+rc.getSoupCarrying());
         /*
         Get the HQ location when first created
          */
@@ -202,7 +202,7 @@ public class Miner extends Unit {
             }
 
         }
-        else if(souplocation.length>6 && !nav.inRadius(HQLocation, rc.getLocation(), 6) && !nav.byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
+        else if(souplocation.length>3 && !nav.byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
             /*
             Here is where we build the refinery.
              */
@@ -371,7 +371,7 @@ public class Miner extends Unit {
                     int[] message = {comms.teamId, 2, seeSoupLoc.x, seeSoupLoc.y, 0,0,0};
                     if(!soupLocations.contains(seeSoupLoc)) {
                         if (rc.getTeamSoup() > 2) {
-                            rc.submitTransaction(message, 2);
+                            rc.submitTransaction(message, 1);
                             System.out.println("Submitted transaction for soup");
                         }
                     }

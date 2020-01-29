@@ -6,6 +6,19 @@ import colin.Shooter;
 import colin.Util;
 import colin.Communications;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
+
+class MessageWaiting {
+    int[] message;
+    int price;
+
+    MessageWaiting(int[] message, int price) {
+        this.message = message;
+        this.price = price;
+    }
+
+}
 
 public class HQ extends Shooter {
     static int numMiners = 0;
@@ -19,6 +32,10 @@ public class HQ extends Shooter {
     };
     static int numRefineries = 0;
     static int maxRefineries = 2;
+    ArrayList<Integer> mainLandscapers = new ArrayList<>();
+    ArrayList<Integer> secondaryLandscapers = new ArrayList<>();
+
+    Queue<MessageWaiting> q = new LinkedList<>();
 
     public HQ(RobotController r) throws GameActionException {
         super(r);
@@ -27,9 +44,35 @@ public class HQ extends Shooter {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-
-        System.out.println("Soup: "+rc.getTeamSoup());
+        System.out.println("Location: "+rc.getLocation());
+        System.out.println("Soup: "+rc.getTeamSoup()+"soup c:"+rc.getSoupCarrying());
         MapLocation[] soupLocations = rc.senseNearbySoup();
+
+        System.out.println("Main Landscaper IDs: ");
+        for(int id : mainLandscapers){
+            System.out.println(" "+id);
+        }
+
+        System.out.println("Secondary Landscaper IDs: ");
+        for(int id : secondaryLandscapers){
+            System.out.println(" "+id);
+        }
+
+        /*
+        Submit transactions that may be on the Queue
+         */
+        if(!q.isEmpty()){
+            System.out.println("Size: "+q.size());
+            MessageWaiting newTransaction;
+            while(!q.isEmpty()){
+                newTransaction = q.peek();
+                if(rc.getTeamSoup()>newTransaction.price){
+                    MessageWaiting mes = q.remove();
+                    rc.submitTransaction(mes.message, mes.price);
+                }
+            }
+        }
+
         /*
         If its not the first round then get the block
         and deal with the messages in the block
@@ -74,7 +117,53 @@ public class HQ extends Shooter {
                             System.out.println("New Landscaper");
                             //broadcast the HQ location for the landscaper
                             int[] trans = {comms.teamId, 0, rc.getLocation().x, rc.getLocation().y, 0, 0, 0};
-                            rc.submitTransaction(trans, 3);
+                            if(rc.getTeamSoup()>7){
+                                rc.submitTransaction(trans, 3);
+                            }else{
+                                System.out.println("adding to Q");
+                                MessageWaiting messageWaiting = new MessageWaiting(trans, 3);
+                                q.add(messageWaiting);
+                            }
+                            break;
+                        case 6:
+                            System.out.println("Landscaper Message");
+                            for(int i=0; i<message.length; i++){
+                                System.out.println(" "+message[i]);
+                            }
+                            if(mainLandscapers.size()<4){
+                                //add to the main landscapers
+                                System.out.println("adding main");
+                                mainLandscapers.add(message[4]);
+                                //transmit its role
+                                int[] roleMessage = {comms.teamId, 7, message[4], 0, 0, 0, 0};
+                                //make sure you have enough soup
+                                if(rc.getTeamSoup()>5){
+                                    rc.submitTransaction(roleMessage, 2);
+                                }
+                                else{
+                                    //add to the Queue if not enough soup
+                                    System.out.println("adding to Q");
+                                    MessageWaiting messageWaiting = new MessageWaiting(roleMessage, 3);
+                                    q.add(messageWaiting);
+                                }
+                            }
+                            else{
+                                System.out.println("adding second");
+                                secondaryLandscapers.add(message[4]);
+                                //transmit its role
+                                int[] roleMessage = {comms.teamId, 7, message[4], 1, 0, 0, 0};
+                                //make sure you have enough soup
+                                if(rc.getTeamSoup()>5){
+                                    rc.submitTransaction(roleMessage, 2);
+                                }
+                                else{
+                                    //add to the Queue if not enough soup
+                                    System.out.println("adding to Q");
+                                    MessageWaiting messageWaiting = new MessageWaiting(roleMessage, 3);
+                                    q.add(messageWaiting);
+                                }
+                            }
+                            break;
                     }
                 }
             }
