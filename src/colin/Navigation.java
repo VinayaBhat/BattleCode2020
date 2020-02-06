@@ -13,19 +13,17 @@ public class Navigation {
         rc = r;
     }
 
-    MapLocation findNearestLocation(MapLocation[] locations){
+    MapLocation findNearestLocation(MapLocation myLocation, MapLocation[] locations){
         int count = 0;
         MapLocation closest = new MapLocation(1,1);
-        MapLocation myLocation = rc.getLocation();
-        System.out.println("Refinery Locations: ");
         for(MapLocation location : locations){
-            System.out.println("- "+location.x+"- -"+location.y+"-");
             if(count==0){
+                //first one starts as closest
                 closest = location;
             }
             else{
                 if(distanceTo(myLocation,location)<distanceTo(myLocation,closest)){
-                    System.out.println("new closest: "+location);
+                    //new closest
                     closest = location;
                 }
             }

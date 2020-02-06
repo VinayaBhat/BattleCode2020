@@ -144,7 +144,7 @@ public class Miner extends Unit {
             }
 
             //find the direction
-            MapLocation closest = nav.findNearestLocation(locations);
+            MapLocation closest = nav.findNearestLocation(rc.getLocation(), locations);
 
             Direction d = rc.getLocation().directionTo(closest);
             if(nav.inRadius(closest, rc.getLocation(), 1)){
