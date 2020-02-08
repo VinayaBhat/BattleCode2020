@@ -11,7 +11,7 @@ public class Communications {
     // all messages from our team should start with this so we can tell them apart
     static final int teamId = 5432830;
     // the second entry in every message tells us what kind of message it is. e.g. 0 means it contains the HQ location
-    static final String[] messageType = {
+    public static final String[] messageType = {
             "HQ loc",
             "Refinery Location",
             "Soup location",
@@ -20,7 +20,7 @@ public class Communications {
             "New Landscaper",
             "Landscaper Message",
             "Landscaper Role Message",
-            "",
+            "Fulfllment Center",
             "Drones"
     };
 

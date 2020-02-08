@@ -23,6 +23,8 @@ public class Miner extends Unit {
     static int numDesignSchools = 0;
     static int maxDesignSchools = 1;
     static int numLandscapers = 0;
+    int numFulfillmentCenter = 0;
+    int maxFulfillmentCenter = 1;
 
     public Miner(RobotController r){
         super(r);
@@ -168,6 +170,49 @@ public class Miner extends Unit {
                     }
                 }
             }
+        }
+        else if(rc.getTeamSoup()>155 && numRefineries>0 && numFulfillmentCenter<1 && rc.getSoupCarrying() > 3 ){
+            /*
+            Build a Fulfillment Center
+             */
+
+            if(nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1)){
+                /*
+                Build Refinery
+                 */
+
+                Direction d = nav.randomDirection();
+                if(tryBuild(RobotType.FULFILLMENT_CENTER, d)){
+                    System.out.println("built fulfillment");
+                    RobotInfo[] robots = rc.senseNearbyRobots();
+                    for(RobotInfo robot : robots){
+                        if(robot.getType()==RobotType.FULFILLMENT_CENTER){
+                            /*
+                            Transmit the fulfillment center x and y
+                             */
+                            MapLocation location = robot.getLocation();
+                            int[] message = {comms.teamId, 8, location.x, location.y, 0, 0, 0};
+                            rc.submitTransaction(message, 2);
+                        }
+                    }
+
+                }
+            }
+            else if(nav.inRadius(rc.getLocation(), HQLocation, 1)){
+                /*
+                Move away from HQ
+                 */
+            }
+            else {
+                /*
+                Move to HQ
+                 */
+                Direction d = rc.getLocation().directionTo(HQLocation);
+                if(nav.tryMove(d)){
+
+                }
+            }
+
         }
         else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && numRefineries>0){
             /*

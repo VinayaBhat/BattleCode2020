@@ -22,7 +22,7 @@ class MessageWaiting {
 
 public class HQ extends Shooter {
     static int numMiners = 0;
-    static int maxMiners = 5;
+    static int maxMiners = 10;
     static int[][] refineries = {
             {-1,-1},
             {-1,-1},
@@ -31,7 +31,7 @@ public class HQ extends Shooter {
             {-1,-1}
     };
     static int numRefineries = 0;
-    static int maxRefineries = 2;
+    static int maxRefineries = 1;
     ArrayList<Integer> mainLandscapers = new ArrayList<>();
     ArrayList<Integer> secondaryLandscapers = new ArrayList<>();
 
