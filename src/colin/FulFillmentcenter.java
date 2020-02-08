@@ -34,7 +34,7 @@ public class FulFillmentcenter extends Building {
                 if (rc.canBuildRobot(RobotType.DELIVERY_DRONE, dir)) {
                     System.out.println("Delivery Drone built" + dir);
                     maxdrones++;
-                    int[] message = {comms.teamId, 8, maxdrones, 0, 0, 0, 0};
+                    int[] message = {comms.teamId, 9, maxdrones, 0, 0, 0, 0};
                     rc.submitTransaction(message, 4);
                 }
 

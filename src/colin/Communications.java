@@ -19,7 +19,9 @@ public class Communications {
             "New Design School",
             "New Landscaper",
             "Landscaper Message",
-            "Landscaper Role Message"
+            "Landscaper Role Message",
+            "",
+            "Drones"
     };
 
     public Communications(RobotController r) {
