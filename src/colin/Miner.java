@@ -17,7 +17,7 @@ public class Miner extends Unit {
         {-1,-1}
     };
     static int numRefineries = 0;
-    static int maxRefineries = 1;
+    static int maxRefineries = 2;
     static int stepsAwayFromHQ = 0;
     static ArrayList<MapLocation> soupLocations = new ArrayList<>();
     static int numDesignSchools = 0;
