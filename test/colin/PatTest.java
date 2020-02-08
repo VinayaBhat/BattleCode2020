@@ -6,11 +6,6 @@ import battlecode.common.*;
 import battlecode.common.MapLocation;
 
 class PatTest {
-    RobotController rc;
-
-    public PatTest(RobotController r) {
-        rc = r;
-    }
 
     // void setUp() {
    //     super.setUp();
@@ -20,6 +15,7 @@ class PatTest {
     //}
     @Test
     void testFindNearestLocation() {
+        RobotController rc = new RobotController;
         Navigation nav = new Navigation(rc);
         MapLocation location1 = new MapLocation(1,1);
         MapLocation location2 = new MapLocation(1,2);
@@ -28,7 +24,7 @@ class PatTest {
 
         MapLocation nearest = nav.findNearestLocation(location1, locations);
 
-        assertEquals(true,true);
+        assertEquals(true, nearest.y == 2);
    }
 
     void testDistanceTo() {
