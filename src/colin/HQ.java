@@ -22,7 +22,7 @@ class MessageWaiting {
 
 public class HQ extends Shooter {
     static int numMiners = 0;
-    static int maxMiners = 10;
+    static int maxMiners = 8;
     static int[][] refineries = {
             {-1,-1},
             {-1,-1},
