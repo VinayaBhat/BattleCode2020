@@ -19,6 +19,7 @@ public strictfp class RobotPlayer {
 
     static int turnCount;
 
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -32,24 +33,22 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
-        System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 // Here, we've separated the controls into a different method for each RobotType.
                 // You can add the missing ones or rewrite this into your own control structure.
-                System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
                     case HQ:                 runHQ();                break;
                     case MINER:              runMiner();             break;
-                    case REFINERY:           runRefinery();          break;
-                    case VAPORATOR:          runVaporator();         break;
-                    case DESIGN_SCHOOL:      runDesignSchool();      break;
-                    case FULFILLMENT_CENTER: runFulfillmentCenter(); break;
-                    case LANDSCAPER:         runLandscaper();        break;
-                    case DELIVERY_DRONE:     runDeliveryDrone();     break;
-                    case NET_GUN:            runNetGun();            break;
+//                    case REFINERY:           runRefinery();          break;
+//                    case VAPORATOR:          runVaporator();         break;
+//                    case DESIGN_SCHOOL:      runDesignSchool();      break;
+//                    case FULFILLMENT_CENTER: runFulfillmentCenter(); break;
+//                    case LANDSCAPER:         runLandscaper();        break;
+//                    case DELIVERY_DRONE:     runDeliveryDrone();     break;
+//                    case NET_GUN:            runNetGun();            break;
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
@@ -64,23 +63,16 @@ public strictfp class RobotPlayer {
 
     static void runHQ() throws GameActionException {
         for (Direction dir : directions)
+            //Building miners in all directions around HQ
             tryBuild(RobotType.MINER, dir);
     }
 
     static void runMiner() throws GameActionException {
+
         tryBlockchain();
-        tryMove(randomDirection());
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
-        // tryBuild(randomSpawnedByMiner(), randomDirection());
-        for (Direction dir : directions)
-            tryBuild(RobotType.FULFILLMENT_CENTER, dir);
-        for (Direction dir : directions)
-            if (tryRefine(dir))
-                System.out.println("I refined soup! " + rc.getTeamSoup());
-        for (Direction dir : directions)
-            if (tryMine(dir))
-                System.out.println("I mined soup! " + rc.getSoupCarrying());
+        Direction rd=randomDirection();
+
+
     }
 
     static void runRefinery() throws GameActionException {
