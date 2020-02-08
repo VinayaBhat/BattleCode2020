@@ -183,7 +183,7 @@ public class Miner extends Unit {
 
             if(nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1)){
                 /*
-                Build Refinery
+                Build Fulfillment
                  */
 
                 Direction d = nav.randomDirection();
@@ -250,9 +250,8 @@ public class Miner extends Unit {
                     }
                 }
             }
-
         }
-        else if(souplocation.length>3 && !nav.byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
+        else if(!nav.byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
             /*
             Here is where we build the refinery.
              */
