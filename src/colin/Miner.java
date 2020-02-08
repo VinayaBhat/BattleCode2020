@@ -110,6 +110,11 @@ public class Miner extends Unit {
                     case 5:
                         numLandscapers++;
                         System.out.println("New Landscaper");
+                        break;
+                    case 8:
+                        numFulfillmentCenter++;
+                        System.out.println("New Fulfillment Center");
+                        break;
                 }
             }
         }
