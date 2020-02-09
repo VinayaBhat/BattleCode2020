@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeliveryDrone extends Unit {
-    List<MapLocation> waterlc=new ArrayList<>();
+    List<MapLocation> waterlc = new ArrayList<>();
     MapLocation enemyHQ;
-
+    boolean cow=false;
 
 
     public DeliveryDrone(RobotController r) {
@@ -19,96 +19,111 @@ public class DeliveryDrone extends Unit {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        System.out.println("ENEMY HQ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! "+enemyHQ);
         int[][] messages = comms.findTeamMessagesInBlockChain();
         for (int[] m : messages) {
             if (m[1] == 10) {
                 System.out.println("WATER FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!!!!!!!!!!!!!!");
-                if(!waterlc.contains(new MapLocation(m[2], m[3])))
+                if (!waterlc.contains(new MapLocation(m[2], m[3])))
                     waterlc.add(new MapLocation(m[2], m[3]));
-            }else if(m[1]==11){
-                enemyHQ=new MapLocation(m[2],m[3]);
+            } else if (m[1] == 11) {
+                enemyHQ = new MapLocation(m[2], m[3]);
             }
         }
-        if(enemyHQ!=null){
+        if (enemyHQ != null) {
             System.out.println("Near Enemy");
-            if(rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)) {
+            if (rc.getLocation().isWithinDistanceSquared(enemyHQ, GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)) {
+                nav.tryMove(rc.getLocation().directionTo(hqLoc));
+                nav.tryMove(rc.getLocation().directionTo(hqLoc));
+                nav.tryMove(rc.getLocation().directionTo(hqLoc));
+                nav.tryMove(rc.getLocation().directionTo(hqLoc));
+                nav.tryMove(rc.getLocation().directionTo(hqLoc));
+                nav.tryMove(rc.getLocation().directionTo(hqLoc));
                 nav.tryMove(rc.getLocation().directionTo(hqLoc));
                 nav.tryMove(rc.getLocation().directionTo(hqLoc));
                 nav.tryMove(rc.getLocation().directionTo(hqLoc));
             }
         }
-        if(!rc.isCurrentlyHoldingUnit()) {
-            System.out.println("Enemy location not found");
-            RobotInfo[] ri = rc.senseNearbyRobots();
-            System.out.println("Number of enemies "+ri.length);
-            if (ri.length > 0) {
-                if (enemyHQ == null) {
-                    for (RobotInfo info : ri) {
-                        if (info.type == RobotType.HQ && rc.getTeam().opponent()==info.getTeam()) {
-                            enemyHQ = info.getLocation();
-                            System.out.println("Enemy Location found");
-                            nav.tryMove(rc.getLocation().directionTo(hqLoc));
-                            nav.tryMove(rc.getLocation().directionTo(hqLoc));
-                            nav.tryMove(rc.getLocation().directionTo(hqLoc));
-                            int[] message={comms.teamId,11,enemyHQ.x,enemyHQ.y,0,0,0};
-                            if(rc.canSubmitTransaction(message,5))
-                                rc.submitTransaction(message,5);
-                        }
+
+        RobotInfo[] ri = rc.senseNearbyRobots();
+        if (!rc.isCurrentlyHoldingUnit()) {
+            for (RobotInfo info : ri) {
+                if (info.type == RobotType.COW) {
+                    if (rc.canPickUpUnit(info.getID())) {
+                        rc.pickUpUnit(info.getID());
+                        cow=true;
+                        break;
                     }
-                }
-                if (ri[0].type != RobotType.HQ && rc.canPickUpUnit(ri[0].getID()) && rc.getTeam().opponent()==ri[0].getTeam() )
+                } else if (info.getTeam() == rc.getTeam().opponent() && info.type == RobotType.HQ) {
+                    if (enemyHQ == null) {
+                        enemyHQ = info.getLocation();
+                        System.out.println("ENEMY FOUND");
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        int[] message = {comms.teamId, 11, enemyHQ.x, enemyHQ.y, 0, 0, 0};
+                        if (rc.canSubmitTransaction(message, 5))
+                            rc.submitTransaction(message, 5);
+                        break;
+                    } else {
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                        break;
+                    }
+                } else if (info.getTeam() == rc.getTeam().opponent() && rc.canPickUpUnit(ri[0].getID())) {
                     rc.pickUpUnit(ri[0].getID());
-            }
-            if(enemyHQ == null) {
-                    boolean move=nav.tryMove(rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x+Util.randomNumber(), mapwidth - hqLoc.y+Util.randomNumber())));
-                   if(!move)
-                       nav.tryMove(nav.randomDirection());
-
-            }else{
-                nav.tryMove(rc.getLocation().directionTo(
-                        new MapLocation(enemyHQ.x+Util.randomNumber(),enemyHQ.y+Util.randomNumber())));
-            }
-        }
-
-
-        if (rc.senseFlooding(rc.getLocation())) {
-            System.out.println("WATER SENSED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            if(!waterlc.contains(rc.getLocation())) {
-                waterlc.add(rc.getLocation());
-                int[] message={comms.teamId,10,rc.getLocation().x,rc.getLocation().y,0,0,0};
-                if(rc.canSubmitTransaction(message,3))
-                    rc.submitTransaction(message,3);
-            }
-        }
-
-        if(rc.isCurrentlyHoldingUnit()){
-            if(waterlc.size()>0){
-                nav.tryMove(rc.getLocation().directionTo(waterlc.get(0)));
-                if(rc.canSenseLocation(waterlc.get(0))){
-                    if(rc.canDropUnit(rc.getLocation().directionTo(waterlc.get(0)))){
-                        rc.dropUnit(rc.getLocation().directionTo(waterlc.get(0)));
-                    }
+                    break;
                 }
-            }else if(enemyHQ==null){
-                nav.tryMove(rc.getLocation().directionTo(new MapLocation(hqLoc.x+Util.randomNumber(),hqLoc.y+Util.randomNumber())));
-            }else{
+            }
+        } else {
+            boolean enemypresent=false;
+            boolean nearenemyHq=false;
+            for(RobotInfo info:ri){
+                if(info.getTeam()!=rc.getTeam().opponent() && info.type==RobotType.HQ && enemyHQ==null){
+                    enemyHQ=info.getLocation();
+                    nearenemyHq=true;
+                    enemypresent=true;
+                    int[] message = {comms.teamId, 11, enemyHQ.x, enemyHQ.y, 0, 0, 0};
+                    if (rc.canSubmitTransaction(message, 5))
+                        rc.submitTransaction(message, 5);
+                }else if(info.getTeam()!=rc.getTeam().opponent()){
+                    enemypresent=true;
+                }
+            }
+
+            if(nearenemyHq){
                 nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+                nav.tryMove(nav.oppositeLocation(rc.getLocation().directionTo(enemyHQ)));
+            }else if(cow && enemypresent){
+               if(rc.canDropUnit(Direction.CENTER))
+                   rc.dropUnit(Direction.CENTER);
+            }else if(enemypresent){
+                if(rc.canDropUnit(Direction.CENTER)){
+                    rc.dropUnit(Direction.CENTER);
+                }
+            }else if(!enemypresent || cow){
+                System.out.println("MOVING TOWRDS ENEMY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                if(enemyHQ==null){
+                    MapLocation loc=new MapLocation(mapheight-hqLoc.x+Util.randomNumber(),mapwidth-hqLoc.y+Util.randomNumber());
+                    nav.tryMove(rc.getLocation().directionTo(loc));
+                }else{
+                    nav.tryMove(rc.getLocation().directionTo(enemyHQ));
+                }
             }
         }
-        MapLocation[] soup=rc.senseNearbySoup();
-        for(int i=0;i<soup.length;i++){
-            int[] message={comms.teamId,2,soup[i].x,soup[i].y,0,0,0};
-            if(rc.canSubmitTransaction(message,3))
-                rc.submitTransaction(message,3);
+
+        if (!rc.isCurrentlyHoldingUnit()) {
+            MapLocation loc=new MapLocation(mapheight-hqLoc.x+Util.randomNumber(),mapwidth-hqLoc.y+Util.randomNumber());
+            if(!nav.tryMove(rc.getLocation().directionTo(loc))){
+                nav.tryMove(nav.randomDirection());
+            }
         }
-
-
-        //nav.tryMove(rc.getLocation().directionTo(new MapLocation(mapheight-hqLoc.x,mapwidth-hqLoc.y)));
-
-
-
-
-
     }
 }
-
