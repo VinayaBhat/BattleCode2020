@@ -185,7 +185,7 @@ public class Navigation {
         return moved;
     }
 
-    Direction oppositeLocation(Direction d){
+    Direction oppositeDirection(Direction d){
         Direction newDirection = randomDirection();
         switch (d){
             case EAST:
