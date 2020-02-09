@@ -26,9 +26,6 @@ public class HQ extends Shooter {
     static int[][] refineries = {
             {-1,-1},
             {-1,-1},
-            {-1,-1},
-            {-1,-1},
-            {-1,-1}
     };
     static int numRefineries = 0;
     static int maxRefineries = 1;
@@ -48,15 +45,8 @@ public class HQ extends Shooter {
         System.out.println("Soup: "+rc.getTeamSoup()+"soup c:"+rc.getSoupCarrying());
         MapLocation[] soupLocations = rc.senseNearbySoup();
 
-        System.out.println("Main Landscaper IDs: ");
-        for(int id : mainLandscapers){
-            System.out.println(" "+id);
-        }
-
-        System.out.println("Secondary Landscaper IDs: ");
-        for(int id : secondaryLandscapers){
-            System.out.println(" "+id);
-        }
+        //Print Landscapers
+        //printLandscapers();
 
         /*
         Submit transactions that may be on the Queue
@@ -196,5 +186,17 @@ public class HQ extends Shooter {
         }
 
 
+    }
+
+    public void printLandscapers() {
+        System.out.println("Main Landscaper IDs: ");
+        for(int id : mainLandscapers){
+            System.out.println(" "+id);
+        }
+
+        System.out.println("Secondary Landscaper IDs: ");
+        for(int id : secondaryLandscapers){
+            System.out.println(" "+id);
+        }
     }
 }
