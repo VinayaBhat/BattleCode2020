@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class Miner extends Unit {
 
     MapLocation HQLocation;
-    int maxRefineries = 1;
+    int maxRefineries = 2;
     ArrayList<MapLocation> refineries = new ArrayList<>();
     ArrayList<MapLocation> soupLocations = new ArrayList<>();
     int numDesignSchools = 0;
@@ -58,7 +58,18 @@ public class Miner extends Unit {
             buildDesignSchool();
         }
         else if(!nav.byRobot(RobotType.REFINERY) && refineries.size()<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
-            buildRefinery();
+
+            if(refineries.size()>0){
+                //check if far away from other refineries
+                for(MapLocation refinery : refineries){
+                    if(!nav.inRadius(refinery, rc.getLocation(), 10)){
+                        buildRefinery();
+                    }
+                }
+            }
+            else{
+                buildRefinery();
+            }
         }
         else if (nearbySoupLocations.length == 0) {
             noNearbySoup();
