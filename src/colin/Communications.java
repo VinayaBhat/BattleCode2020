@@ -22,7 +22,8 @@ public class Communications {
             "Landscaper Role Message",
             "Fulfllment Center",
             "Drones",
-            "Water"
+            "Water",
+            "Enemy HQ"
     };
 
     public Communications(RobotController r) {

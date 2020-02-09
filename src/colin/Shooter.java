@@ -15,6 +15,7 @@ public class Shooter extends Building {
         Team enemy = rc.getTeam().opponent();
         RobotInfo[] enemiesInRange = rc.senseNearbyRobots(GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED, enemy);
 
+
         for (RobotInfo e : enemiesInRange) {
             if (e.type == RobotType.DELIVERY_DRONE) {
                 if (rc.canShootUnit(e.ID)){
