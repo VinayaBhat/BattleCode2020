@@ -6,86 +6,40 @@ import java.util.ArrayList;
 
 public class Miner extends Unit {
 
-    RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
-            RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
-    int turnCount;
     MapLocation HQLocation;
-    int [][] refineries = {
-        {-1,-1},
-        {-1,-1},
-        {-1,-1},
-        {-1,-1},
-        {-1,-1}
-    };
-    int numRefineries = 0;
     int maxRefineries = 1;
+    ArrayList<MapLocation> refineries = new ArrayList<>();
     ArrayList<MapLocation> soupLocations = new ArrayList<>();
     int numDesignSchools = 0;
     int maxDesignSchools = 1;
     int numLandscapers = 0;
     int numFulfillmentCenter = 0;
-    int maxFulfillmentCenter = 1;
 
     public Miner(RobotController r){
         super(r);
     }
 
-    boolean tryMine(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canMineSoup(dir)) {
-            rc.mineSoup(dir);
-            return true;
-        } else return false;
-    }
-
     public void takeTurn() throws GameActionException {
         System.out.println("cooldown: "+rc.getCooldownTurns());
         System.out.println("ID: "+rc.getID()+"soup carrying: "+rc.getSoupCarrying());
-        /*
-        Get the HQ location when first created
-         */
-        System.out.println("Refineries: ");
-        for(int i=0; i<refineries.length; i++){
-            if(refineries[i][0]==-1){
-                break;
-            }
-            else{
-                System.out.println("  x: " + refineries[0] + " y: " + refineries[1] );
-            }
+
+
+        //get HQ Location when first made.
+        if(HQLocation==null){
+            System.out.println("getting HQ");
+            getHQLocation();
         }
 
-        if (HQLocation == null) {
-            RobotInfo[] searchRobot = rc.senseNearbyRobots();
-            for (RobotInfo robot : searchRobot) {
-                if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
-                    HQLocation = robot.location;
-                    System.out.println(" HQ location " + HQLocation);
-                }
-            }
-        }
+        printRefineries();
 
-        //print refinery locations
-        for(int[] location : refineries){
-            if(location[0]==-1){
-                break;
-            }
-            else{
-                System.out.println("Refinery at x:"+location[0]+" y:"+location[1]);
-            }
-
-        }
-
-        /*
-        If its not the first round then get the block
-        and deal with the messages in the block
-         */
+        //always get blockchain messages first
         dealWithBlockchainMessages();
 
         MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
-        System.out.println("soups near me: "+nearbySoupLocations.length);
 
         /*
         if the miner has reached its souplimit
-        then go to the HQ
+        then go to deposit
         */
         if(rc.getSoupCarrying()==RobotType.MINER.soupLimit) {
            /*
@@ -93,17 +47,17 @@ public class Miner extends Unit {
             */
            findClosestDepositLocation();
         }
-        else if(rc.getTeamSoup()>155 && numRefineries>0 && numFulfillmentCenter<1 && rc.getSoupCarrying() > 3 ){
+        else if(rc.getTeamSoup()>155 && refineries.size()>0 && numFulfillmentCenter<1 && rc.getSoupCarrying() > 3 ){
             /*
             Build a Fulfillment Center
              */
             buildFulfillmentCenter();
 
         }
-        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && numRefineries>0){
+        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size()>0){
             buildDesignSchool();
         }
-        else if(!nav.byRobot(RobotType.REFINERY) && numRefineries<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
+        else if(!nav.byRobot(RobotType.REFINERY) && refineries.size()<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
             buildRefinery();
         }
         else if (nearbySoupLocations.length == 0) {
@@ -115,6 +69,28 @@ public class Miner extends Unit {
             Soup Nearby!
              */
             goToNearbySoup(nearbySoupLocations);
+        }
+    }
+
+    private void getHQLocation() {
+        /*
+        Get the HQ location when first created
+         */
+        if (HQLocation == null) {
+            RobotInfo[] searchRobot = rc.senseNearbyRobots();
+            for (RobotInfo robot : searchRobot) {
+                if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
+                    HQLocation = robot.location;
+                    System.out.println("HQ location " + HQLocation);
+                }
+            }
+        }
+    }
+
+    private void printRefineries() {
+        System.out.println("Refineries: ");
+        for(MapLocation location : refineries ){
+            System.out.println("  x: " + location.x + " y: " + location.y );
         }
     }
 
@@ -136,9 +112,13 @@ public class Miner extends Unit {
                         break;
                     case 1:
                         //message about the refinery location
-                        refineries[numRefineries][0] = mes[2];
-                        refineries[numRefineries][1] = mes[3];
-                        numRefineries++;
+                        MapLocation newLocation = new MapLocation(mes[2], mes[3]);
+                        if(refineries.contains(newLocation)){
+                            System.out.println("got it already");
+                        }
+                        else {
+                            refineries.add(newLocation);
+                        }
                         System.out.println("Refinery Location: x:"+ mes[2]+" y:"+mes[3]);
                         break;
                     case 2:
@@ -295,24 +275,25 @@ public class Miner extends Unit {
                 /*
                 Before landscapers
                  */
-            int size = numRefineries+1;
+            int size = refineries.size()+1;
             locations = new MapLocation[size];
             locations[0] = HQLocation;
-            for(int i = 1; i<size; i++){
-                MapLocation newLocation = new MapLocation(refineries[i-1][0],refineries[i-1][1]);
-                System.out.println("adding "+newLocation);
-                locations[i] = newLocation;
+            int slot = 1;
+            for(MapLocation refinery : refineries){
+                locations[slot] = refinery;
+                slot++;
             }
         }
         else {
-                /*
-                After Landscapers
-                 */
-            locations = new MapLocation[numRefineries];
-            for(int i = 0; i<numRefineries; i++){
-                MapLocation newLocation = new MapLocation(refineries[i][0], refineries[i][1]);
-                System.out.println("adding "+newLocation);
-                locations[i] = newLocation;
+            /*
+            After Landscapers
+             */
+            int slot = 0;
+            locations = new MapLocation[refineries.size()];
+            for(MapLocation refinery : refineries){
+                System.out.println("adding "+refinery);
+                locations[slot] = refinery;
+                slot++;
             }
         }
 
@@ -431,6 +412,7 @@ public class Miner extends Unit {
             }
         }
     }
+
     public void buildRefinery() throws GameActionException {
         Direction dir = nav.randomDirection();
         if(tryBuild(RobotType.REFINERY, dir)){
@@ -451,6 +433,14 @@ public class Miner extends Unit {
             System.out.println("can't build " + dir);
         }
     }
+
+    boolean tryMine(Direction dir) throws GameActionException {
+        if (rc.isReady() && rc.canMineSoup(dir)) {
+            rc.mineSoup(dir);
+            return true;
+        } else return false;
+    }
+
     /**
      * Attempts to refine soup in a given direction.
      *
