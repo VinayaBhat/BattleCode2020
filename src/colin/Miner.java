@@ -6,24 +6,23 @@ import java.util.ArrayList;
 
 public class Miner extends Unit {
 
-    static RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
+    RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
-    static int turnCount;
-    static MapLocation HQLocation;
-    static int [][] refineries = {
+    int turnCount;
+    MapLocation HQLocation;
+    int [][] refineries = {
         {-1,-1},
         {-1,-1},
         {-1,-1},
         {-1,-1},
         {-1,-1}
     };
-    static int numRefineries = 0;
-    static int maxRefineries = 1;
-    static int stepsAwayFromHQ = 0;
-    static ArrayList<MapLocation> soupLocations = new ArrayList<>();
-    static int numDesignSchools = 0;
-    static int maxDesignSchools = 1;
-    static int numLandscapers = 0;
+    int numRefineries = 0;
+    int maxRefineries = 1;
+    ArrayList<MapLocation> soupLocations = new ArrayList<>();
+    int numDesignSchools = 0;
+    int maxDesignSchools = 1;
+    int numLandscapers = 0;
     int numFulfillmentCenter = 0;
     int maxFulfillmentCenter = 1;
 
