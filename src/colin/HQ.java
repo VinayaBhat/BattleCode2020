@@ -77,7 +77,7 @@ public class HQ extends Shooter {
         If its not the first round then get the block
         and deal with the messages in the block
          */
-        if(rc.getRoundNum()>0){
+        if(rc.getRoundNum()>1){
             int[][] teamMessages = comms.findTeamMessagesInBlockChain();
 
             //loop through messages from our team
