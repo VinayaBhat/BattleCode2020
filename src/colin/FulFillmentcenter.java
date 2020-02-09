@@ -22,23 +22,25 @@ public class FulFillmentcenter extends Building {
 
 
 
+        int[][] messagesfromblockchain=comms.findTeamMessagesInBlockChain();
+        for(int[] m:messagesfromblockchain){
+            if(m[1]==9){
+                maxdrones=m[2];
+            }
+        }
 
-            for (Direction dir : Util.directions) {
-                int[][] messagesfromblockchain=comms.findTeamMessagesInBlockChain();
-                for(int[] m:messagesfromblockchain){
-                    if(m[1]==8){
-                        maxdrones=m[3];
-                    }
-                }
-                if(maxdrones<3) {
+        if(maxdrones<4) {
+            for(Direction dir:Util.directions) {
                 if (rc.canBuildRobot(RobotType.DELIVERY_DRONE, dir)) {
+                    rc.buildRobot(RobotType.DELIVERY_DRONE, dir);
                     System.out.println("Delivery Drone built" + dir);
                     maxdrones++;
                     int[] message = {comms.teamId, 9, maxdrones, 0, 0, 0, 0};
                     rc.submitTransaction(message, 4);
+                    break;
                 }
-
             }
+
         }
 
 
