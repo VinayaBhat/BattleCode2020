@@ -51,6 +51,15 @@ public class Miner extends Unit {
                 }
             }
         }
+       for(Direction dir: Util.directions){
+           if(rc.senseFlooding(rc.adjacentLocation(dir))){
+               MapLocation l=rc.adjacentLocation(dir);
+               int[] message={comms.teamId, 10,l.x, l.y, 0, 0, 0};
+               if(rc.canSubmitTransaction(message,3)){
+                   rc.submitTransaction(message,3);
+               }
+           }
+       }
 
         //print refinery locations
         for(int[] location : refineries){
