@@ -1,4 +1,4 @@
-https://travis-ci.com/VinayaBhat/BattleCode2020.svg?token=TYFst7vxy4yDyDNwCsTd&branch=master
+[![Build Status](https://travis-ci.com/VinayaBhat/BattleCode2020.svg?token=TYFst7vxy4yDyDNwCsTd&branch=master)](https://travis-ci.com/VinayaBhat/BattleCode2020)
 # Battlecode 2020 Scaffold
 
 This is the Battlecode 2020 scaffold, containing an `examplefuncsplayer`. Read https://2020.battlecode.org/getting-started!
