@@ -16,6 +16,10 @@ public class Util {
             Direction.NORTHWEST
     };
 
+    static int[] movement = {
+          -10,10,0,-20,20,-5,5,15,-15
+    };
+
     /**
      * Returns a random Direction.
      *
@@ -24,4 +28,6 @@ public class Util {
     static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
     }
+
+    static int randomNumber(){return movement[(int) (Math.random() * movement.length)];}
 }

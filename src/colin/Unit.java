@@ -7,10 +7,18 @@ public class Unit extends Robot {
 
     Navigation nav;
     MapLocation hqLoc;
+    int mapheight;
+    int mapwidth;
+
+
 
     public Unit(RobotController r) {
         super(r);
         nav = new Navigation(rc);
+        mapheight=rc.getMapHeight();
+        mapwidth=rc.getMapWidth();
+
+
     }
 
     public void takeTurn() throws GameActionException {

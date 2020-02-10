@@ -92,7 +92,7 @@ dependencies {
     client group: 'org.battlecode', name: clientName, version: versions.battlecode
 
     // Scala!
-    implementation 'org.scala-lang:scala-library:2.11.7'
+    implementation 'org.scala-lang:scala-library:2.11.12'
     testImplementation 'org.scalatest:scalatest_2.11:3.0.0'
     testImplementation 'junit:junit:4.12'
 }
@@ -126,7 +126,7 @@ task version {
 task screamForUpdate() {
     group 'battlecode'
     doLast {
-        if (versions.battlecode != new URL("https://2020.battlecode.org/version.txt").text.trim()) print("\n\n\n\n\n\n\tNEW VERSION AVAILABLE\n\trun ./gradlew update to download \n\n\n\n")
+        if (versions.battlecode != new URL("http://2020.battlecode.org/version.txt").text.trim()) print("\n\n\n\n\n\n\tNEW VERSION AVAILABLE\n\trun ./gradlew update to download \n\n\n\n")
     }
 }
 
@@ -136,7 +136,8 @@ task update {
     group 'battlecode'
     doLast {
         //overwrites stored version number
-        new File(projectDir, "version.txt").text = new URL("https://2020.battlecode.org/version.txt").text.trim()
+        new File(projectDir, "version.txt").text = new URL("http://2020.battlecode.org/version.txt").text.trim()
+        new File(projectDir, "version.txt").text = new URL("http://2020.battlecode.org/version.txt").text.trim()
 
         //overwrites cached version number
         versions.battlecode = new File(projectDir, "version.txt").text

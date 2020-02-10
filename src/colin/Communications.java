@@ -21,7 +21,9 @@ public class Communications {
             "Landscaper Message",
             "Landscaper Role Message",
             "Fulfllment Center",
-            "Drones"
+            "Drones",
+            "Water",
+            "Enemy HQ"
     };
 
     public Communications(RobotController r) {
@@ -129,4 +131,6 @@ public class Communications {
         }
         return allMessages;
     }
+
+
 }
