@@ -167,9 +167,15 @@ public class DeliveryDrone extends Unit {
 
         if (!rc.isCurrentlyHoldingUnit()) {
             nav.tryMove(loc);
+        }else if(!rc.isCurrentlyHoldingUnit() && enemyHQ!=null && rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)){
+                    nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
         }
 
     }
+
 
 
 }
