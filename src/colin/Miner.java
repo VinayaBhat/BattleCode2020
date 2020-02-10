@@ -20,6 +20,12 @@ public class Miner extends Unit {
     }
 
     public void takeTurn() throws GameActionException {
+        for(Direction dir:Util.directions) {
+        if( rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))){
+                comms.updatewaterlocation(rc.getLocation().add(dir));
+            }
+        }
+
         System.out.println("cooldown: "+rc.getCooldownTurns());
         System.out.println("ID: "+rc.getID()+"soup carrying: "+rc.getSoupCarrying());
 

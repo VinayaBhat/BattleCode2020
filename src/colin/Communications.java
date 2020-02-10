@@ -2,9 +2,12 @@ package colin;
 
 import battlecode.common.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class Communications {
     RobotController rc;
+    List<MapLocation> waterloc=new ArrayList<>();
 
     // state related only to communications should go here
 
@@ -130,6 +133,16 @@ public class Communications {
             }
         }
         return allMessages;
+    }
+
+    public void updatewaterlocation(MapLocation Location) throws GameActionException {
+           int[] message={teamId,10,Location.x,Location.y,0,0,0};
+           if(rc.canSubmitTransaction(message,3))
+               rc.submitTransaction(message,3);
+    }
+
+    public List<MapLocation> getWaterLocation(){
+        return waterloc;
     }
 
 
