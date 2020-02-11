@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class Communications {
     RobotController rc;
-    List<MapLocation> waterloc=new ArrayList<>();
+
 
     // state related only to communications should go here
 
@@ -97,18 +97,6 @@ public class Communications {
         }
     }
 
-    public void updateSoupLocations(ArrayList<MapLocation> soupLocations) throws GameActionException {
-        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
-            int[] mess = tx.getMessage();
-            if (mess[0] == teamId && mess[1] == 2) {
-                MapLocation double_checker = new MapLocation(mess[2], mess[3]);
-                System.out.println("heard about a tasty new soup location");
-                if (!soupLocations.contains(double_checker)) {
-                    soupLocations.add(double_checker);
-                }
-            }
-        }
-    }
 
     public int[][] findTeamMessagesInBlockChain() throws  GameActionException{
         Transaction[] transactions = rc.getBlock(rc.getRoundNum()-1);
@@ -135,15 +123,7 @@ public class Communications {
         return allMessages;
     }
 
-    public void updatewaterlocation(MapLocation Location) throws GameActionException {
-           int[] message={teamId,10,Location.x,Location.y,0,0,0};
-           if(rc.canSubmitTransaction(message,3))
-               rc.submitTransaction(message,3);
-    }
 
-    public List<MapLocation> getWaterLocation(){
-        return waterloc;
-    }
 
 
 }

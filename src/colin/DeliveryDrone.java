@@ -2,7 +2,6 @@ package colin;
 
 import battlecode.common.*;
 
-import java.awt.event.WindowAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class DeliveryDrone extends Unit {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         Direction loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
-
+//Finding water location and enemy HQ
         int[][] messages = comms.findTeamMessagesInBlockChain();
         for (int[] m : messages) {
             if (m[1] == 11 && enemyHQ == null) {
@@ -41,9 +40,9 @@ public class DeliveryDrone extends Unit {
                     waterlc.add(new MapLocation(m[2],m[3]));
             }
         }
+        //Trying to sense water location
         for (Direction dir : Util.directions) {
             if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))) {
-                comms.updatewaterlocation(rc.getLocation().add(dir));
                 if(!waterlc.contains(rc.getLocation().add(dir)))
                     waterlc.add(rc.getLocation().add(dir));
             }
@@ -51,6 +50,10 @@ public class DeliveryDrone extends Unit {
 
         boolean enemypresent = false;
         RobotInfo[] ri = rc.senseNearbyRobots();
+//         If nearby robot is
+//         1.cow then carry it.
+//         2.enemy robot then carry it.
+//         3.enemyHQ found then broadcast it
         for (RobotInfo info : ri) {
             if (info.type == RobotType.COW && !rc.isCurrentlyHoldingUnit() && !alreadycarriedow) {
                 if (rc.canPickUpUnit(info.getID())) {
@@ -83,7 +86,7 @@ public class DeliveryDrone extends Unit {
                 enemypresent = true;
             }
         }
-
+//        If not carrying anything and enemyHQ is found. try to find the danger zone
         if (!rc.isCurrentlyHoldingUnit() && enemyHQ != null) {
             boolean forbidden = false;
             for (MapLocation mp : forbiddenloc) {
@@ -97,7 +100,7 @@ public class DeliveryDrone extends Unit {
                 nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             }
         }
-
+//        If carrying cow and near enemy location then drop it
         if (rc.isCurrentlyHoldingUnit() && cow) {
             if (enemypresent) {
                 for (Direction dir : Util.directions) {
@@ -110,7 +113,9 @@ public class DeliveryDrone extends Unit {
                 nav.tryMove(loc);
             }
         }
-
+//       If carrying enemy
+//       if water location found then drop the enemy in water
+//       else move towards our HQ
         System.out.println("HOWWWWWWWWWWWWWWWWWW MAAAANYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY WAAAAAAAAAAAAAAAAATERRRRRRRRRRRRRR " + waterlc.size());
         if (rc.isCurrentlyHoldingUnit() && !cow) {
             if (waterlc.size() > 0) {
@@ -148,7 +153,6 @@ public class DeliveryDrone extends Unit {
 
                 for (Direction dir : Util.directions) {
                     if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))) {
-                        comms.updatewaterlocation(rc.getLocation().add(dir));
                         waterlc.add(rc.getLocation().add(dir));
 //                            if(rc.canDropUnit(dir)){
 //                                rc.dropUnit(dir);
@@ -165,6 +169,8 @@ public class DeliveryDrone extends Unit {
 //            else if (!rc.isCurrentlyHoldingUnit() && enemyHQ==null && !movetowardsenemyafterdropping && !rc.canSenseLocation(hqLoc))
 //                nav.tryMove(nav.randomDirection());
 
+
+        //If not holding anything then move towards enemy location
         if (!rc.isCurrentlyHoldingUnit()) {
             nav.tryMove(loc);
         }else if(!rc.isCurrentlyHoldingUnit() && enemyHQ!=null && rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)){
