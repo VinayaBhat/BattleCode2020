@@ -115,7 +115,6 @@ public class Communications {
             int[] message = transaction.getMessage();
             System.out.println("  "+transaction.getSerializedMessage());
             if(message[0]==teamId){
-                System.out.println("found one");
                 allMessages[count] = message;
                 count++;
             }
