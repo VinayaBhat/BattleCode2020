@@ -7,13 +7,13 @@ import java.util.ArrayList;
 public class Miner extends Unit {
 
     MapLocation HQLocation;
-    int maxRefineries = 1;
+    int maxRefineries = 2;
     ArrayList<MapLocation> refineries = new ArrayList<>();
     ArrayList<MapLocation> soupLocations = new ArrayList<>();
+    boolean fulfillmentCenterCreated = false;
     int numDesignSchools = 0;
     int maxDesignSchools = 1;
     int numLandscapers = 0;
-    int numFulfillmentCenter = 0;
 
     public Miner(RobotController r){
         super(r);
@@ -53,18 +53,28 @@ public class Miner extends Unit {
             */
            findClosestDepositLocation();
         }
-        else if(rc.getTeamSoup()>155 && refineries.size()>0 && numFulfillmentCenter<1 && rc.getSoupCarrying() > 3 ){
+        else if(rc.getTeamSoup()>155 && refineries.size()>0 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3 ){
             /*
             Build a Fulfillment Center
              */
             buildFulfillmentCenter();
-
         }
         else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size()>0){
             buildDesignSchool();
         }
         else if(!nav.byRobot(RobotType.REFINERY) && refineries.size()<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
-            buildRefinery();
+
+            if(refineries.size()>0){
+                //check if far away from other refineries
+                for(MapLocation refinery : refineries){
+                    if(!nav.inRadius(refinery, rc.getLocation(), 10)){
+                        buildRefinery();
+                    }
+                }
+            }
+            else{
+                buildRefinery();
+            }
         }
         else if (nearbySoupLocations.length == 0) {
             noNearbySoup();
@@ -150,8 +160,8 @@ public class Miner extends Unit {
                         System.out.println("New Landscaper");
                         break;
                     case 8:
-                        numFulfillmentCenter++;
-                        System.out.println("New Fulfillment Center");
+                        fulfillmentCenterCreated = true;
+                        System.out.println("Fulfillment Created");
                         break;
                 }
             }
@@ -241,9 +251,10 @@ public class Miner extends Unit {
             /*
             Build Fulfillment
              */
-            Direction d = nav.randomDirection();
+            Direction d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
             if(tryBuild(RobotType.FULFILLMENT_CENTER, d)){
                 System.out.println("built fulfillment");
+                fulfillmentCenterCreated = true;
                 RobotInfo[] robots = rc.senseNearbyRobots();
                 for(RobotInfo robot : robots){
                     if(robot.getType()==RobotType.FULFILLMENT_CENTER){
@@ -421,22 +432,41 @@ public class Miner extends Unit {
 
     public void buildRefinery() throws GameActionException {
         Direction dir = nav.randomDirection();
-        if(tryBuild(RobotType.REFINERY, dir)){
-            System.out.println("built");
-            RobotInfo[] r = rc.senseNearbyRobots();
-            System.out.println("length: "+r.length);
-            for(RobotInfo robot : r){
-                System.out.println("Robot id: " + robot.getID() + "type: "+ robot.type);
-                if(robot.type == RobotType.REFINERY){
-                    System.out.println("sending refinery location");
-                    MapLocation location = robot.getLocation();
-                    int[] refineryLocationTransaction = {comms.teamId, 1, location.x, location.y, 0, 0, 0};
-                    rc.submitTransaction(refineryLocationTransaction, 20);
-                }
-            }
+        if(nav.inRadius(rc.getLocation(), HQLocation, 3)){
+            //move away from HQ
+            moveAwayFromHQ();
         }
         else {
-            System.out.println("can't build " + dir);
+            if (tryBuild(RobotType.REFINERY, dir)) {
+                System.out.println("built");
+                RobotInfo[] r = rc.senseNearbyRobots();
+                System.out.println("length: " + r.length);
+                for (RobotInfo robot : r) {
+                    System.out.println("Robot id: " + robot.getID() + "type: " + robot.type);
+                    if (robot.type == RobotType.REFINERY) {
+                        System.out.println("sending refinery location");
+                        MapLocation location = robot.getLocation();
+                        int[] refineryLocationTransaction = {comms.teamId, 1, location.x, location.y, 0, 0, 0};
+                        rc.submitTransaction(refineryLocationTransaction, 20);
+                    }
+                }
+            } else {
+                System.out.println("can't build " + dir);
+            }
+        }
+    }
+
+    private void moveAwayFromHQ() throws GameActionException {
+        Direction d = rc.getLocation().directionTo(HQLocation);
+        Direction opposite = nav.oppositeDirection(d);
+        if(nav.tryMove(opposite)){
+            System.out.println("Moved away from HQ");
+        }
+        else if (nav.tryAltMoves(opposite)){
+            System.out.println("Moved away from HQ alt");
+        }
+        else{
+            System.out.println("can't move at all");
         }
     }
 
