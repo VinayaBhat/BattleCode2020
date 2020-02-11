@@ -4,6 +4,7 @@ import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class Communications {
     RobotController rc;
@@ -12,7 +13,7 @@ public class Communications {
     // state related only to communications should go here
 
     // all messages from our team should start with this so we can tell them apart
-    static final int teamId = 5432830;
+    static int teamId = 0;
     // the second entry in every message tells us what kind of message it is. e.g. 0 means it contains the HQ location
     public static final String[] messageType = {
             "HQ loc",
@@ -31,6 +32,8 @@ public class Communications {
 
     public Communications(RobotController r) {
         rc = r;
+        Random rand = new Random();
+        teamId = rand.nextInt(500000);
     }
 
     public void sendHqLoc(MapLocation loc) throws GameActionException {
@@ -121,6 +124,12 @@ public class Communications {
         }
         return allMessages;
     }
+
+    public void broadcastRemoveSoup(MapLocation location, int price) throws GameActionException {
+        int[] message = {teamId, 3, location.x, location.y, 0, 0, 0};
+        rc.submitTransaction(message, price);
+    }
+
 
 
 
