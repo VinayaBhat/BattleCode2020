@@ -1,8 +1,7 @@
-package colin;
+package player;
 import battlecode.common.*;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class Miner extends Unit {
 

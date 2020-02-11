@@ -1,12 +1,10 @@
-package colin;
+package player;
 import battlecode.common.*;
-import colin.Util;
 
 import java.util.Random;
 
 import static battlecode.common.Direction.*;
 import static java.lang.StrictMath.abs;
-import static java.lang.StrictMath.cbrt;
 
 public class Navigation {
     RobotController rc;

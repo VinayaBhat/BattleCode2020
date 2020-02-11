@@ -1,6 +1,5 @@
-package colin;
+package player;
 import battlecode.common.*;
-import colin.Building;
 
 public class Shooter extends Building {
 

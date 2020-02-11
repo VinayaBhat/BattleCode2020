@@ -1,4 +1,4 @@
-package colin;
+package player;
 
 import battlecode.common.*;
 

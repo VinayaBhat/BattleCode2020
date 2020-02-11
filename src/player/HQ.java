@@ -1,10 +1,7 @@
-package colin;
+package player;
 
 import battlecode.common.*;
-import colin.Navigation;
-import colin.Shooter;
-import colin.Util;
-import colin.Communications;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
