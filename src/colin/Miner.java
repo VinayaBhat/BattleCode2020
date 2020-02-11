@@ -27,6 +27,16 @@ public class Miner extends Unit {
             getHQLocation();
         }
 
+        //Miners trying to sense water
+       for(Direction dir:Util.directions){
+           if(rc.senseFlooding(rc.getLocation().add(dir))){
+               int[] message={comms.teamId,10,rc.getLocation().add(dir).x,rc.getLocation().add(dir).y,0,0,0};
+               if(rc.canSubmitTransaction(message,3)){
+                   rc.submitTransaction(message,3);
+               }
+           }
+       }
+
         printRefineries();
 
         //always get blockchain messages first

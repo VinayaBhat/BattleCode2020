@@ -27,19 +27,8 @@ public class DeliveryDrone extends Unit {
         Direction loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
 //Finding water location and enemy HQ
         int[][] messages = comms.findTeamMessagesInBlockChain();
-        for (int[] m : messages) {
-            if (m[1] == 11 && enemyHQ == null) {
-                enemyHQ = new MapLocation(m[2], m[3]);
-                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y + 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y + 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y - 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y - 15));
-                System.out.println("ENEMY HQ FROM BLOCKCHAIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            }else if(m[1]==10){
-                if(!waterlc.contains(new MapLocation(m[2],m[3])))
-                    waterlc.add(new MapLocation(m[2],m[3]));
-            }
-        }
+        getwaterlocationandenemyHQ(messages);
+
         //Trying to sense water location
         for (Direction dir : Util.directions) {
             if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))) {
@@ -182,6 +171,21 @@ public class DeliveryDrone extends Unit {
 
     }
 
+    public void getwaterlocationandenemyHQ(int[][] messages){
+        for (int[] m : messages) {
+            if (m[1] == 11 && enemyHQ == null) {
+                enemyHQ = new MapLocation(m[2], m[3]);
+                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y + 15));
+                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y + 15));
+                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y - 15));
+                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y - 15));
+                System.out.println("ENEMY HQ FROM BLOCKCHAIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }else if(m[1]==10){
+                if(!waterlc.contains(new MapLocation(m[2],m[3])))
+                    waterlc.add(new MapLocation(m[2],m[3]));
+            }
+        }
+    }
 
 
 }
