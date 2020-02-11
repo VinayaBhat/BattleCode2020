@@ -20,13 +20,10 @@ public class Miner extends Unit {
     }
 
     public void takeTurn() throws GameActionException {
-        System.out.println("cooldown: "+rc.getCooldownTurns());
-        System.out.println("ID: "+rc.getID()+"soup carrying: "+rc.getSoupCarrying());
-
+        System.out.println("ID: "+rc.getID()+" soup: "+rc.getSoupCarrying());
 
         //get HQ Location when first made.
         if(HQLocation==null){
-            System.out.println("getting HQ");
             getHQLocation();
         }
 
@@ -35,8 +32,13 @@ public class Miner extends Unit {
         //always get blockchain messages first
         dealWithBlockchainMessages();
 
-        MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
+        /*
+        Next an else if for buildlings
+        This forces priority over soup
+         */
 
+        MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
+        System.out.println("soup nearby: "+nearbySoupLocations.length);
         /*
         if the miner has reached its souplimit
         then go to deposit
@@ -47,13 +49,13 @@ public class Miner extends Unit {
             */
            findClosestDepositLocation();
         }
-        else if(rc.getTeamSoup()>155 && refineries.size()>0 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3 ){
+        else if(rc.getTeamSoup()>155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3 ){
             /*
             Build a Fulfillment Center
              */
             buildFulfillmentCenter();
         }
-        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>150 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size()>0){
+        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>155 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size()>0){
             buildDesignSchool();
         }
         else if(!nav.byRobot(RobotType.REFINERY) && refineries.size()<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
@@ -70,16 +72,19 @@ public class Miner extends Unit {
                 buildRefinery();
             }
         }
-        else if (nearbySoupLocations.length == 0) {
-            noNearbySoup();
-        }
         //there is soup nearby
-        else {
+        else if(nearbySoupLocations.length>0) {
             /*
             Soup Nearby!
              */
             goToNearbySoup(nearbySoupLocations);
         }
+
+        if (nearbySoupLocations.length == 0) {
+            noNearbySoup();
+        }
+
+        System.out.println("HELP I SHOULD BE DOING SOMETING");
     }
 
     private void getHQLocation() {
@@ -112,30 +117,30 @@ public class Miner extends Unit {
             //messages is initialized with all -1
             //so if there is a -1 it is the end
             if(mes[0]==-1){
-                System.out.println("end of messages");
+                //end of messages
                 break;
             }else{
                 switch(mes[1]){
                     case 0:
                         //message about the HQ location
-                        System.out.println("HQ Location: x:"+ mes[2]+" y:"+mes[3]);
+                        if(HQLocation==null){
+                            HQLocation = new MapLocation(mes[2],mes[3]);
+                            System.out.println("HQ Location: x:"+ mes[2]+" y:"+mes[3]);
+                        }
                         break;
                     case 1:
                         //message about the refinery location
                         MapLocation newLocation = new MapLocation(mes[2], mes[3]);
-                        if(refineries.contains(newLocation)){
-                            System.out.println("got it already");
-                        }
-                        else {
+                        if(!refineries.contains(newLocation)){
+                            System.out.println("New Refinery");
                             refineries.add(newLocation);
                         }
-                        System.out.println("Refinery Location: x:"+ mes[2]+" y:"+mes[3]);
                         break;
                     case 2:
                         //message about soup location
                         MapLocation loc = new MapLocation(mes[2], mes[3]);
                         if(!soupLocations.contains(loc)){
-                            System.out.println("new location");
+                            System.out.println("New Soup Location");
                             soupLocations.add(loc);
                         }
                         //System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
@@ -163,37 +168,25 @@ public class Miner extends Unit {
     }
 
     private void goToNearbySoup(MapLocation[] nearbySoupLocations) throws GameActionException {
-                   /*
-            Here the robot detects that there is soup
-            within its radius
-             */
-        boolean bySoup=false;
-        int step=0;
-        //first check if this soup is found already
-        //or near other soup we know about
-        boolean soupAlreadyKnown = false;
+        /*
+        Here the robot detects that there is soup
+        within its radius
+         */
 
-            /*
-            Check if any of the soups in radius are not in
-            the global variable.
-             */
+        /*
+        Check if any of the soups in radius are not in
+        the global variable.
+         */
         for(MapLocation seeSoupLoc : nearbySoupLocations){
             //first check if the soup is known
-            for(MapLocation knownSoupLoc : soupLocations){
-                if(seeSoupLoc.x == knownSoupLoc.x && seeSoupLoc.y == knownSoupLoc.y){
-                    //we already have this soup
-                    soupAlreadyKnown = true;
-                }
-            }
+            //System.out.println("Soup Location: ["+seeSoupLoc.x+","+seeSoupLoc.y+"]");
             //if soup isn't known then submit transaction
-            if(!soupAlreadyKnown){
+            if(!soupLocations.contains(seeSoupLoc)){
                 //broadcast the soup to everyone
                 int[] message = {comms.teamId, 2, seeSoupLoc.x, seeSoupLoc.y, 0,0,0};
-                if(!soupLocations.contains(seeSoupLoc)) {
-                    if (rc.getTeamSoup() > 2) {
-                        rc.submitTransaction(message, 1);
-                        System.out.println("Submitted transaction for soup");
-                    }
+                if (rc.getTeamSoup() > 2) {
+                    rc.submitTransaction(message, 1);
+                    System.out.println("Submitted transaction for soup");
                 }
             }
         }
@@ -204,24 +197,28 @@ public class Miner extends Unit {
         Only need to go up to 7 locations because
         nearbySoupLocations should be ordered by closest? <-- this is an assumption
          */
+
+        boolean bySoup = false;
         for(MapLocation loc: nearbySoupLocations) {
-            if(step>7) break;
             if (nav.inRadius(rc.getLocation(), loc, 1)) {
                 bySoup = true;
                 Direction d = rc.getLocation().directionTo(loc);
                 if(tryMine(d)){
                     System.out.println("mined "+d);
                 }else{
-                    //could not mine so check if there is actually soup there?
+                    //maybe no soup
                 }
             }
-            step+=1;
+            else{
+                //break because closest one is not in 1 radius
+                break;
+            }
         }
 
-            /*
-            Finally, if not by any soup then try and move towards
-            the soup that is within the robots radius
-             */
+        /*
+        Finally, if not by any soup then try and move towards
+        the soup that is within the robots radius
+         */
         if(!bySoup){
             //not by soup so move
             //System.out.println("i should move");
@@ -302,7 +299,6 @@ public class Miner extends Unit {
             int slot = 0;
             locations = new MapLocation[refineries.size()];
             for(MapLocation refinery : refineries){
-                System.out.println("adding "+refinery);
                 locations[slot] = refinery;
                 slot++;
             }
@@ -312,8 +308,7 @@ public class Miner extends Unit {
         MapLocation closest = nav.findNearestLocation(rc.getLocation(), locations);
 
         Direction d = rc.getLocation().directionTo(closest);
-        System.out.println("My Location: "+rc.getLocation());
-        System.out.println("Closest: "+closest);
+
         if(nav.inRadius(closest, rc.getLocation(), 1)){
             if(tryRefine(d)){
                 System.out.println("mined");
@@ -341,11 +336,16 @@ public class Miner extends Unit {
         /*
         Here the miner does not detect any soup near it
          */
+        System.out.println("in nearby soup");
         if(soupLocations.size()>0){
             /*
             If there is known soup locations then go there
              */
             goToKnownSoup();
+            System.out.println("soup: ");
+            for(MapLocation soup : soupLocations){
+                System.out.println(" ["+soup.x+","+soup.y+"]");
+            }
         }
         else{
             /*
@@ -374,7 +374,6 @@ public class Miner extends Unit {
             else{
                 //location around robot but could not mine.
                 int soupAmount = rc.senseSoup(soupLoc);
-                System.out.println("could not mine "+d+" soup amount: "+soupAmount);
                 if(soupAmount==0){
                     int[] message = {comms.teamId, 3, soupLoc.x, soupLoc.y, 0,0,0};
                     if(rc.getTeamSoup()>4){
@@ -436,7 +435,6 @@ public class Miner extends Unit {
                 RobotInfo[] r = rc.senseNearbyRobots();
                 System.out.println("length: " + r.length);
                 for (RobotInfo robot : r) {
-                    System.out.println("Robot id: " + robot.getID() + "type: " + robot.type);
                     if (robot.type == RobotType.REFINERY) {
                         System.out.println("sending refinery location");
                         MapLocation location = robot.getLocation();
