@@ -41,8 +41,6 @@ public class Miner extends Unit {
                 numRefineries += 1;
                 System.out.println("created a refinery. it is number " + numDesignSchools);
             }
-
-
         }
 
         if ((numRefineries > 0 && numRefineries < 2) && numDesignSchools < 3){

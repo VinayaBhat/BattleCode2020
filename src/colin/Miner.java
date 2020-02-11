@@ -79,7 +79,7 @@ public class Miner extends Unit {
             if(refineries.size()>0){
                 //check if far away from other refineries
                 for(MapLocation refinery : refineries){
-                    if(!nav.inRadius(refinery, rc.getLocation(), 10)){
+                    if(!nav.inRadius(refinery, rc.getLocation(), 10) && nearbySoupLocations.length>2){
                         buildRefinery();
                     }
                 }
@@ -183,59 +183,8 @@ public class Miner extends Unit {
     }
 
     private void goToNearbySoup(MapLocation[] nearbySoupLocations) throws GameActionException {
-         diagonalMovementCount = 0;
-        /*
-        Here the robot detects that there is soup
-        within its radius
-         */
+        diagonalMovementCount = 0;
 
-        /*
-        Check if any of the soups in radius are not in
-        the global variable.
-         */
-        /*
-            for(MapLocation seeSoupLoc : nearbySoupLocations){
-            //first check if the soup is known
-            //System.out.println("Soup Location: ["+seeSoupLoc.x+","+seeSoupLoc.y+"]");
-            //if soup isn't known then submit transaction
-            if(!soupLocations.contains(seeSoupLoc) && rc.getTeamSoup() > 2){
-                //broadcast the soup to everyone
-                int[] message = {comms.teamId, 2, seeSoupLoc.x, seeSoupLoc.y, 0,0,0};
-                soupLocations.add(seeSoupLoc);
-                rc.submitTransaction(message, 1);
-                System.out.println("Submitted transaction for soup");
-                break;
-            }
-        }*/
-
-        /*
-        Check if the soup is within 1 square
-        Mine if it is
-        Only need to go up to 7 locations because
-        nearbySoupLocations should be ordered by closest? <-- this is an assumption
-         */
-
-        /*boolean bySoup = false;
-        for(MapLocation loc: nearbySoupLocations) {
-            if (nav.inRadius(rc.getLocation(), loc, 1) && rc.getTeamSoup() > 2) {
-                bySoup = true;
-                Direction d = rc.getLocation().directionTo(loc);
-                MapLocation location = rc.getLocation().add(d);
-                int[] message = {comms.teamId, 2, location.x, location.y, 0,0,0};
-                soupLocations.add(location);
-                rc.submitTransaction(message, 1);
-                System.out.println("Submitted transaction for soup");
-                if(tryMine(d)){
-                    System.out.println("mined "+d);
-                }else{
-                    //maybe no soup
-                }
-            }
-            else{
-                //break because closest one is not in 1 radius
-                break;
-            }
-        }*/
         boolean bySoup = false;
         for (Direction dir : Util.directions) {
             if (tryMine(dir)) {
