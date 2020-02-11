@@ -22,7 +22,7 @@ class MessageWaiting {
 
 public class HQ extends Shooter {
     int numMiners = 0;
-    int maxMiners = 6;
+    int maxMiners = 10;
     ArrayList<MapLocation> refineries = new ArrayList<>();
     ArrayList<Integer> mainLandscapers = new ArrayList<>();
     ArrayList<Integer> secondaryLandscapers = new ArrayList<>();
