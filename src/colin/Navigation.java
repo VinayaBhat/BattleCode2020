@@ -2,7 +2,11 @@ package colin;
 import battlecode.common.*;
 import colin.Util;
 
+import java.util.Random;
+
+import static battlecode.common.Direction.*;
 import static java.lang.StrictMath.abs;
+import static java.lang.StrictMath.cbrt;
 
 public class Navigation {
     RobotController rc;
@@ -11,6 +15,58 @@ public class Navigation {
 
     public Navigation(RobotController r) {
         rc = r;
+    }
+
+    public Direction getRandomDiagonal(){
+        Random rand = new Random();
+        int choice = rand.nextInt(3); //random int 0-3
+        return Util.diagonals[choice];
+    }
+
+    public Direction getNextDiagonal(Direction dir){
+        switch(dir){
+            case SOUTHEAST:
+                if(rc.canMove(SOUTH)){
+                    return SOUTHWEST;
+                }
+                else if(rc.canMove(NORTH)){
+                    return NORTHEAST;
+                }
+                else{
+                    return randomDirection();
+                }
+            case SOUTHWEST:
+                if(rc.canMove(SOUTH)){
+                    return SOUTHEAST;
+                }
+                else if(rc.canMove(NORTH)){
+                    return NORTHWEST;
+                }
+                else{
+                    return randomDirection();
+                }
+            case NORTHWEST:
+                if(rc.canMove(NORTH)){
+                    return NORTHEAST;
+                }
+                else if(rc.canMove(SOUTH)){
+                    return SOUTHWEST;
+                }
+                else{
+                    return randomDirection();
+                }
+            case NORTHEAST:
+                if(rc.canMove(NORTH)){
+                    return NORTHWEST;
+                }
+                else if(rc.canMove(SOUTH)){
+                    return SOUTHEAST;
+                }
+                else{
+                    return randomDirection();
+                }
+        }
+        return randomDirection();
     }
 
     MapLocation findNearestLocation(MapLocation myLocation, MapLocation[] locations){
@@ -84,7 +140,7 @@ public class Navigation {
                     }
 
                 } else {
-                    if (tryMove(Direction.SOUTHEAST)) {
+                    if (tryMove(SOUTHEAST)) {
                         System.out.println("moved southeast");
                         moved = true;
                     }
@@ -118,7 +174,7 @@ public class Navigation {
                 return moved;
             case SOUTH:
                 if (flip) {
-                    if (tryMove(Direction.SOUTHEAST)) {
+                    if (tryMove(SOUTHEAST)) {
                         System.out.println("moved southeast");
                         moved = true;
                     }
@@ -199,7 +255,7 @@ public class Navigation {
             case NORTHEAST:
                 return Direction.SOUTHWEST;
             case NORTHWEST:
-                return Direction.SOUTHEAST;
+                return SOUTHEAST;
             case SOUTHEAST:
                 return Direction.NORTHWEST;
             case SOUTHWEST:

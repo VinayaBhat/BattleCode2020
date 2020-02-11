@@ -16,6 +16,13 @@ public class Util {
             Direction.NORTHWEST
     };
 
+    static Direction[] diagonals = {
+            Direction.SOUTHWEST,
+            Direction.SOUTHEAST,
+            Direction.NORTHWEST,
+            Direction.NORTHEAST
+    };
+
     static int[] movement = {
           -10,10,-20,20,-5,5,15,-15
     };

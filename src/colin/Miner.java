@@ -1,6 +1,5 @@
 package colin;
 import battlecode.common.*;
-import com.sun.tools.corba.se.idl.PragmaEntry;
 
 import java.util.ArrayList;
 
@@ -14,6 +13,8 @@ public class Miner extends Unit {
     int numDesignSchools = 0;
     int maxDesignSchools = 1;
     int numLandscapers = 0;
+    int diagonalMovementCount = 0;
+    Direction diagonalDirection;
 
     public Miner(RobotController r){
         super(r);
@@ -59,18 +60,22 @@ public class Miner extends Unit {
             Robot is full of soup
             */
            findClosestDepositLocation();
+           diagonalMovementCount = 0;
         }
         else if(rc.getTeamSoup()>155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3 ){
             /*
             Build a Fulfillment Center
              */
             buildFulfillmentCenter();
+            diagonalMovementCount = 0;
         }
         else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>155 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size()>0){
             buildDesignSchool();
+            diagonalMovementCount = 0;
+
         }
         else if(!nav.byRobot(RobotType.REFINERY) && refineries.size()<maxRefineries && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20){
-
+            diagonalMovementCount = 0;
             if(refineries.size()>0){
                 //check if far away from other refineries
                 for(MapLocation refinery : refineries){
@@ -89,13 +94,12 @@ public class Miner extends Unit {
             Soup Nearby!
              */
             goToNearbySoup(nearbySoupLocations);
+            diagonalMovementCount = 0;
         }
 
         if (nearbySoupLocations.length == 0) {
             noNearbySoup();
         }
-
-        System.out.println("HELP I SHOULD BE DOING SOMETING");
     }
 
     private void getHQLocation() {
@@ -179,6 +183,7 @@ public class Miner extends Unit {
     }
 
     private void goToNearbySoup(MapLocation[] nearbySoupLocations) throws GameActionException {
+         diagonalMovementCount = 0;
         /*
         Here the robot detects that there is soup
         within its radius
@@ -188,19 +193,20 @@ public class Miner extends Unit {
         Check if any of the soups in radius are not in
         the global variable.
          */
-        for(MapLocation seeSoupLoc : nearbySoupLocations){
+        /*
+            for(MapLocation seeSoupLoc : nearbySoupLocations){
             //first check if the soup is known
             //System.out.println("Soup Location: ["+seeSoupLoc.x+","+seeSoupLoc.y+"]");
             //if soup isn't known then submit transaction
-            if(!soupLocations.contains(seeSoupLoc)){
+            if(!soupLocations.contains(seeSoupLoc) && rc.getTeamSoup() > 2){
                 //broadcast the soup to everyone
                 int[] message = {comms.teamId, 2, seeSoupLoc.x, seeSoupLoc.y, 0,0,0};
-                if (rc.getTeamSoup() > 2) {
-                    rc.submitTransaction(message, 1);
-                    System.out.println("Submitted transaction for soup");
-                }
+                soupLocations.add(seeSoupLoc);
+                rc.submitTransaction(message, 1);
+                System.out.println("Submitted transaction for soup");
+                break;
             }
-        }
+        }*/
 
         /*
         Check if the soup is within 1 square
@@ -209,11 +215,16 @@ public class Miner extends Unit {
         nearbySoupLocations should be ordered by closest? <-- this is an assumption
          */
 
-        boolean bySoup = false;
+        /*boolean bySoup = false;
         for(MapLocation loc: nearbySoupLocations) {
-            if (nav.inRadius(rc.getLocation(), loc, 1)) {
+            if (nav.inRadius(rc.getLocation(), loc, 1) && rc.getTeamSoup() > 2) {
                 bySoup = true;
                 Direction d = rc.getLocation().directionTo(loc);
+                MapLocation location = rc.getLocation().add(d);
+                int[] message = {comms.teamId, 2, location.x, location.y, 0,0,0};
+                soupLocations.add(location);
+                rc.submitTransaction(message, 1);
+                System.out.println("Submitted transaction for soup");
                 if(tryMine(d)){
                     System.out.println("mined "+d);
                 }else{
@@ -223,6 +234,18 @@ public class Miner extends Unit {
             else{
                 //break because closest one is not in 1 radius
                 break;
+            }
+        }*/
+        boolean bySoup = false;
+        for (Direction dir : Util.directions) {
+            if (tryMine(dir)) {
+                bySoup = true;
+                MapLocation soupLoc = rc.getLocation().add(dir);
+                if (!soupLocations.contains(soupLoc)) {
+                    int[] message = {comms.teamId, 2, soupLoc.x, soupLoc.y, 0,0,0};
+                    soupLocations.add(soupLoc);
+                    rc.submitTransaction(message, 1);
+                }
             }
         }
 
@@ -353,6 +376,8 @@ public class Miner extends Unit {
             If there is known soup locations then go there
              */
             goToKnownSoup();
+
+            //Print known soup
             System.out.println("soup: ");
             for(MapLocation soup : soupLocations){
                 System.out.println(" ["+soup.x+","+soup.y+"]");
@@ -362,7 +387,8 @@ public class Miner extends Unit {
             /*
             If there are no known soup locations move randomly?
              */
-            Direction rd = nav.randomDirection();
+
+            /*Direction rd = nav.randomDirection();
             if (nav.tryMove(rd)) {
                 System.out.println("Robot moved in random direction " + rd);
             } else if (nav.tryAltMoves(rd)) {
@@ -370,6 +396,29 @@ public class Miner extends Unit {
             }
             else {
                 System.out.println("Robot could not move");
+            }*/
+
+            doScreenSaverMovement();
+        }
+    }
+
+    private void doScreenSaverMovement() throws GameActionException {
+        diagonalMovementCount++;
+
+        if(diagonalDirection==null || diagonalMovementCount==0){
+            diagonalDirection = nav.getRandomDiagonal();
+        }
+        else{
+            //move diagonally
+            if(nav.tryMove(diagonalDirection)){
+                System.out.println("Moving Diagonally");
+            }
+            else{
+                System.out.println("blocked, getting new direction");
+                diagonalDirection = nav.getNextDiagonal(diagonalDirection);
+                if(nav.tryMove(diagonalDirection)){
+                    System.out.println("moved new direction");
+                }
             }
         }
     }
