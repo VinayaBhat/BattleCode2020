@@ -22,6 +22,7 @@ public class Miner extends Unit {
 
     public void takeTurn() throws GameActionException {
         System.out.println("ID: "+rc.getID()+" soup: "+rc.getSoupCarrying());
+        System.out.println("Diag: "+diagonalMovementCount);
 
         //get HQ Location when first made.
         if(HQLocation==null){
@@ -363,8 +364,9 @@ public class Miner extends Unit {
                 System.out.println("Moving Diagonally");
             }
             else{
-                System.out.println("blocked, getting new direction");
+                System.out.println("blocked"+diagonalDirection+" getting new direction");
                 diagonalDirection = nav.getNextDiagonal(diagonalDirection);
+                System.out.println("New direction: "+diagonalDirection);
                 if(nav.tryMove(diagonalDirection)){
                     System.out.println("moved new direction");
                 }

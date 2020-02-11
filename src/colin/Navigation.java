@@ -24,49 +24,51 @@ public class Navigation {
     }
 
     public Direction getNextDiagonal(Direction dir){
+        Random rand = new Random();
+        int choice = rand.nextInt(3);
         switch(dir){
             case SOUTHEAST:
-                if(rc.canMove(SOUTH)){
+                if(rc.canMove(SOUTH) && rc.canMove(SOUTHWEST)){
                     return SOUTHWEST;
                 }
-                else if(rc.canMove(NORTH)){
+                else if(rc.canMove(NORTH) && rc.canMove(NORTHEAST)){
                     return NORTHEAST;
                 }
                 else{
-                    return randomDirection();
+                    return Util.diagonals[choice];
                 }
             case SOUTHWEST:
-                if(rc.canMove(SOUTH)){
+                if(rc.canMove(SOUTH) && rc.canMove(SOUTHEAST)){
                     return SOUTHEAST;
                 }
-                else if(rc.canMove(NORTH)){
+                else if(rc.canMove(NORTH) && rc.canMove(NORTHWEST)){
                     return NORTHWEST;
                 }
                 else{
-                    return randomDirection();
+                    return Util.diagonals[choice];
                 }
             case NORTHWEST:
-                if(rc.canMove(NORTH)){
+                if(rc.canMove(NORTH) && rc.canMove(NORTHEAST)){
                     return NORTHEAST;
                 }
-                else if(rc.canMove(SOUTH)){
+                else if(rc.canMove(SOUTH) && rc.canMove(SOUTHWEST)){
                     return SOUTHWEST;
                 }
                 else{
-                    return randomDirection();
+                    return Util.diagonals[choice];
                 }
             case NORTHEAST:
-                if(rc.canMove(NORTH)){
+                if(rc.canMove(NORTH) && rc.canMove(NORTHWEST)){
                     return NORTHWEST;
                 }
-                else if(rc.canMove(SOUTH)){
+                else if(rc.canMove(SOUTH) && rc.canMove(SOUTHEAST)){
                     return SOUTHEAST;
                 }
                 else{
-                    return randomDirection();
+                    return Util.diagonals[choice];
                 }
         }
-        return randomDirection();
+        return Util.diagonals[choice];
     }
 
     MapLocation findNearestLocation(MapLocation myLocation, MapLocation[] locations){
