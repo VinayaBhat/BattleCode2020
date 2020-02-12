@@ -1,10 +1,5 @@
-package colin;
+package team10pdx;
 import battlecode.common.*;
-import colin.*;
-import colin.Building;
-import colin.Miner;
-import colin.Robot;
-import colin.Unit;
 
 public strictfp class RobotPlayer {
     /**

@@ -1,9 +1,5 @@
-package colin;
+package team10pdx;
 import battlecode.common.*;
-import colin.Building;
-import colin.Util;
-
-import java.util.ArrayList;
 
 
 public class DesignSchool extends Building {

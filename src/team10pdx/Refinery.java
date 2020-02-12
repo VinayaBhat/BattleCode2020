@@ -1,6 +1,5 @@
-package colin;
+package team10pdx;
 import battlecode.common.*;
-import colin.Building;
 
 public class Refinery extends Building {
     public Refinery(RobotController r) {

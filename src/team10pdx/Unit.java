@@ -1,7 +1,5 @@
-package colin;
+package team10pdx;
 import battlecode.common.*;
-import colin.Navigation;
-import colin.Robot;
 
 public class Unit extends Robot {
 

@@ -1,4 +1,4 @@
-package colin;
+package team10pdx;
 
 import battlecode.common.*;
 

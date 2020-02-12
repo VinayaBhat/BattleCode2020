@@ -1,7 +1,5 @@
-package colin;
+package team10pdx;
 import battlecode.common.*;
-
-import java.util.Map;
 
 public class Landscaper extends Unit {
 
