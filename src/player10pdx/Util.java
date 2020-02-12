@@ -1,4 +1,4 @@
-package colin;
+package player10pdx;
 import battlecode.common.*;
 
 // This is a file to accumulate all the random helper functions
@@ -6,18 +6,14 @@ import battlecode.common.*;
 // For example, lots of logic involving MapLocations and Directions is common and ubiquitous.
 public class Util {
     static Direction[] directions = {
-            Direction.NORTH,
-            Direction.NORTHEAST,
-            Direction.EAST,
-            Direction.SOUTHEAST,
-            Direction.SOUTH,
-            Direction.SOUTHWEST,
-            Direction.WEST,
-            Direction.NORTHWEST
-    };
-
-    static int[] movement = {
-          -10,10,-20,20,-5,5,15,-15
+        Direction.NORTH,
+        Direction.NORTHEAST,
+        Direction.EAST,
+        Direction.SOUTHEAST,
+        Direction.SOUTH,
+        Direction.SOUTHWEST,
+        Direction.WEST,
+        Direction.NORTHWEST
     };
 
     /**
@@ -28,6 +24,4 @@ public class Util {
     static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
     }
-
-    static int randomNumber(){return movement[(int) (Math.random() * movement.length)];}
 }

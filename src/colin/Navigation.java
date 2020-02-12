@@ -2,11 +2,7 @@ package colin;
 import battlecode.common.*;
 import colin.Util;
 
-import java.util.Random;
-
-import static battlecode.common.Direction.*;
 import static java.lang.StrictMath.abs;
-import static java.lang.StrictMath.cbrt;
 
 public class Navigation {
     RobotController rc;
@@ -15,60 +11,6 @@ public class Navigation {
 
     public Navigation(RobotController r) {
         rc = r;
-    }
-
-    public Direction getRandomDiagonal(){
-        Random rand = new Random();
-        int choice = rand.nextInt(3); //random int 0-3
-        return Util.diagonals[choice];
-    }
-
-    public Direction getNextDiagonal(Direction dir){
-        Random rand = new Random();
-        int choice = rand.nextInt(3);
-        switch(dir){
-            case SOUTHEAST:
-                if(rc.canMove(SOUTH) && rc.canMove(SOUTHWEST)){
-                    return SOUTHWEST;
-                }
-                else if(rc.canMove(NORTH) && rc.canMove(NORTHEAST)){
-                    return NORTHEAST;
-                }
-                else{
-                    return Util.diagonals[choice];
-                }
-            case SOUTHWEST:
-                if(rc.canMove(SOUTH) && rc.canMove(SOUTHEAST)){
-                    return SOUTHEAST;
-                }
-                else if(rc.canMove(NORTH) && rc.canMove(NORTHWEST)){
-                    return NORTHWEST;
-                }
-                else{
-                    return Util.diagonals[choice];
-                }
-            case NORTHWEST:
-                if(rc.canMove(NORTH) && rc.canMove(NORTHEAST)){
-                    return NORTHEAST;
-                }
-                else if(rc.canMove(SOUTH) && rc.canMove(SOUTHWEST)){
-                    return SOUTHWEST;
-                }
-                else{
-                    return Util.diagonals[choice];
-                }
-            case NORTHEAST:
-                if(rc.canMove(NORTH) && rc.canMove(NORTHWEST)){
-                    return NORTHWEST;
-                }
-                else if(rc.canMove(SOUTH) && rc.canMove(SOUTHEAST)){
-                    return SOUTHEAST;
-                }
-                else{
-                    return Util.diagonals[choice];
-                }
-        }
-        return Util.diagonals[choice];
     }
 
     MapLocation findNearestLocation(MapLocation myLocation, MapLocation[] locations){
@@ -142,7 +84,7 @@ public class Navigation {
                     }
 
                 } else {
-                    if (tryMove(SOUTHEAST)) {
+                    if (tryMove(Direction.SOUTHEAST)) {
                         System.out.println("moved southeast");
                         moved = true;
                     }
@@ -176,7 +118,7 @@ public class Navigation {
                 return moved;
             case SOUTH:
                 if (flip) {
-                    if (tryMove(SOUTHEAST)) {
+                    if (tryMove(Direction.SOUTHEAST)) {
                         System.out.println("moved southeast");
                         moved = true;
                     }
@@ -257,7 +199,7 @@ public class Navigation {
             case NORTHEAST:
                 return Direction.SOUTHWEST;
             case NORTHWEST:
-                return SOUTHEAST;
+                return Direction.SOUTHEAST;
             case SOUTHEAST:
                 return Direction.NORTHWEST;
             case SOUTHWEST:

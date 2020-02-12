@@ -1,32 +1,20 @@
-package colin;
-
+package player10pdx;
 import battlecode.common.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class Communications {
     RobotController rc;
 
-
     // state related only to communications should go here
 
     // all messages from our team should start with this so we can tell them apart
-    static final int teamId = 5432830;
+    static final int teamSecret = 444444444;
     // the second entry in every message tells us what kind of message it is. e.g. 0 means it contains the HQ location
-    public static final String[] messageType = {
+    static final String[] messageType = {
             "HQ loc",
-            "Refinery Location",
-            "Soup location",
-            "Remove Soup Location",
-            "New Design School",
-            "New Landscaper",
-            "Landscaper Message",
-            "Landscaper Role Message",
-            "Fulfllment Center",
-            "Drones",
-            "Water",
-            "Enemy HQ"
+            "design school created",
+            "soup location",
+            "refinery created"
     };
 
     public Communications(RobotController r) {
@@ -35,7 +23,7 @@ public class Communications {
 
     public void sendHqLoc(MapLocation loc) throws GameActionException {
         int[] message = new int[7];
-        message[0] = teamId;
+        message[0] = teamSecret;
         message[1] = 0;
         message[2] = loc.x; // x coord of HQ
         message[3] = loc.y; // y coord of HQ
@@ -47,7 +35,7 @@ public class Communications {
         for (int i = 1; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
                 int[] mess = tx.getMessage();
-                if (mess[0] == teamId && mess[1] == 0) {
+                if (mess[0] == teamSecret && mess[1] == 0) {
                     System.out.println("found the HQ!");
                     return new MapLocation(mess[2], mess[3]);
                 }
@@ -62,7 +50,7 @@ public class Communications {
         if (broadcastedCreation[cue]) return; // don't re-broadcast
         {
             int[] message = new int[7];
-            message[0] = teamId;
+            message[0] = teamSecret;
             message[1] = cue;
             message[2] = loc.x; // x coord of HQ
             message[3] = loc.y; // y coord of HQ
@@ -76,18 +64,18 @@ public class Communications {
     // check the latest block for unit creation messages
     public int getnewBuildingCount(int cue) throws GameActionException {
         int count = 0;
-        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
-            int[] mess = tx.getMessage();
-            if (mess[0] == teamId && mess[1] == cue) {
-                count += 1;
+            for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+                int[] mess = tx.getMessage();
+                if (mess[0] == teamSecret && mess[1] == cue) {
+                    count += 1;
+                }
             }
-        }
         return count;
     }
 
     public void broadcastSoupLocation(MapLocation loc) throws GameActionException {
         int[] message = new int[7];
-        message[0] = teamId;
+        message[0] = teamSecret;
         message[1] = 2;
         message[2] = loc.x; // x coord of HQ
         message[3] = loc.y; // y coord of HQ
@@ -97,32 +85,17 @@ public class Communications {
         }
     }
 
-
-    public int[][] findTeamMessagesInBlockChain() throws  GameActionException{
-        Transaction[] transactions = rc.getBlock(rc.getRoundNum()-1);
-        int[][] allMessages = {
-                {-1,-1,-1,-1,-1,-1,-1},
-                {-1,-1,-1,-1,-1,-1,-1},
-                {-1,-1,-1,-1,-1,-1,-1},
-                {-1,-1,-1,-1,-1,-1,-1},
-                {-1,-1,-1,-1,-1,-1,-1},
-                {-1,-1,-1,-1,-1,-1,-1},
-                {-1,-1,-1,-1,-1,-1,-1}};
-
-        int count = 0;
-        System.out.println("Transactions: ");
-        for(Transaction transaction : transactions){
-            int[] message = transaction.getMessage();
-            System.out.println("  "+transaction.getSerializedMessage());
-            if(message[0]==teamId){
-                allMessages[count] = message;
-                count++;
+    public void updateSoupLocations(ArrayList<MapLocation> soupLocations) throws GameActionException {
+        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] mess = tx.getMessage();
+            if (mess[0] == teamSecret && mess[1] == 2) {
+                MapLocation double_checker = new MapLocation(mess[2], mess[3]);
+                System.out.println("heard about a tasty new soup location");
+                if (!soupLocations.contains(double_checker)) {
+                    soupLocations.add(double_checker);
+                }
             }
         }
-        return allMessages;
     }
-
-
-
-
 }
+

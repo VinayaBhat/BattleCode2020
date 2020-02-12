@@ -22,7 +22,7 @@ class MessageWaiting {
 
 public class HQ extends Shooter {
     int numMiners = 0;
-    int maxMiners = 8;
+    int maxMiners = 6;
     ArrayList<MapLocation> refineries = new ArrayList<>();
     ArrayList<Integer> mainLandscapers = new ArrayList<>();
     ArrayList<Integer> secondaryLandscapers = new ArrayList<>();
@@ -38,6 +38,7 @@ public class HQ extends Shooter {
         super.takeTurn();
         System.out.println("Location: "+rc.getLocation());
         System.out.println("Soup: "+rc.getTeamSoup()+"soup c:"+rc.getSoupCarrying());
+
         //Print Landscapers
         //printLandscapers();
 
@@ -116,7 +117,13 @@ public class HQ extends Shooter {
                     case 1:
                         //message about the refinery location
                         MapLocation newRefinery = new MapLocation(message[2], message[3]);
-                        refineries.add(newRefinery);
+                        if(refineries.contains(newRefinery)){
+                            System.out.println("Already have refinery");
+                        }
+                        else{
+                            System.out.println("Refinery Location: x:"+ message[2]+" y:"+message[3]);
+                            refineries.add(newRefinery);
+                        }
                         int[] mes = {comms.teamId, 1, newRefinery.x, newRefinery.y, 0, 0, 0};
                         if(rc.getTeamSoup()>5){
                             rc.submitTransaction(mes, 3);
