@@ -1,8 +1,6 @@
-package player;
+package team10pdx;
 
 import battlecode.common.*;
-
-import java.util.Random;
 
 public class Communications {
     RobotController rc;
@@ -30,8 +28,12 @@ public class Communications {
 
     public Communications(RobotController r) {
         rc = r;
-        Random rand = new Random();
-        teamId = rand.nextInt(500000);
+        if(rc.getTeam()==Team.A){
+            teamId = 99999;
+        }
+        else{
+            teamId = 88888;
+        }
     }
 
     public void sendHqLoc(MapLocation loc) throws GameActionException {

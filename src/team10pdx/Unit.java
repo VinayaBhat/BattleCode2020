@@ -1,4 +1,4 @@
-package player;
+package team10pdx;
 import battlecode.common.*;
 
 public class Unit extends Robot {

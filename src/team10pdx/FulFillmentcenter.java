@@ -1,4 +1,4 @@
-package player;
+package team10pdx;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;

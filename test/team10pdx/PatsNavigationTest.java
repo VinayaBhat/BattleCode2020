@@ -1,4 +1,4 @@
-package player;
+package team10pdx;
 
 import static org.junit.Assert.*;
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package player;
+package team10pdx;
 import battlecode.common.*;
 
 import java.util.ArrayList;
