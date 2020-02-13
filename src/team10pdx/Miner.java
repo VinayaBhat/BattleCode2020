@@ -1,8 +1,7 @@
-package colin;
+package team10pdx;
 import battlecode.common.*;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class Miner extends Unit {
 
@@ -44,7 +43,7 @@ public class Miner extends Unit {
                    }
                }
        }
-
+        printSoupLocations();
         printRefineries();
 
         //always get blockchain messages first
@@ -119,7 +118,8 @@ public class Miner extends Unit {
         for(Direction dir : Util.directions){
             MapLocation loc = rc.getLocation().add(dir);
             if(soupLocations.contains(loc)){
-                if(!rc.canMineSoup(dir) && rc.getTeamSoup() > 2){
+                int soupAmount = rc.senseSoup(loc);
+                if(soupAmount==0 && rc.getTeamSoup() > 2){
                     System.out.println("broadcasting remove soup");
                     comms.broadcastRemoveSoup(loc, 2);
                 }
@@ -223,8 +223,9 @@ public class Miner extends Unit {
         boolean bySoup = false;
         for (Direction dir : Util.directions) {
             if(rc.canMineSoup(dir))
+                bySoup = true;
+                System.out.println("trying to mine in "+dir);
                 if (tryMine(dir)) {
-                    bySoup = true;
                     MapLocation soupLoc = rc.getLocation().add(dir);
                     if (!soupLocations.contains(soupLoc)) {
                         System.out.println("adding soup location ["+soupLoc.x+","+soupLoc.y+"]");
@@ -249,10 +250,12 @@ public class Miner extends Unit {
                     System.out.println("moved "+d);
                     break;
                 }
+                else if(nav.tryAltMoves(d)){
+                    System.out.println("moved "+d);
+                }
                 else{
-                    if(nav.tryAltMoves(d)){
-                        System.out.println("moved "+d);
-                    }
+                    if(nav.tryMove(nav.randomDirection()))
+                        System.out.println("move randomly");
                 }
             }
         }
@@ -357,7 +360,7 @@ public class Miner extends Unit {
         /*
         Here the miner does not detect any soup near it
          */
-        System.out.println("in nearby soup");
+        System.out.println("in no nearby soup");
         if(soupLocations.size()>0){
             /*
             If there is known soup locations then go there

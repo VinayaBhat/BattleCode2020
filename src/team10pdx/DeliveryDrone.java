@@ -1,4 +1,4 @@
-package colin;
+package team10pdx;
 
 import battlecode.common.*;
 
@@ -67,10 +67,10 @@ public class DeliveryDrone extends Unit {
                 int[] message = {comms.teamId, 11, enemyHQ.x, enemyHQ.y, 0, 0, 0};
                 if (rc.canSubmitTransaction(message, 5))
                     rc.submitTransaction(message, 5);
-                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y + 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y + 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y - 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y - 15));
+                forbiddenloc.add(new MapLocation(enemyHQ.x + 10, enemyHQ.y + 10));
+                forbiddenloc.add(new MapLocation(enemyHQ.x - 10, enemyHQ.y + 10));
+                forbiddenloc.add(new MapLocation(enemyHQ.x - 10, enemyHQ.y - 10));
+                forbiddenloc.add(new MapLocation(enemyHQ.x + 10, enemyHQ.y - 10));
             } else if (info.getTeam() == enemy) {
                 enemypresent = true;
             }
@@ -160,10 +160,11 @@ public class DeliveryDrone extends Unit {
 
 
         //If not holding anything then move towards enemy location
+        loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
         if (!rc.isCurrentlyHoldingUnit()) {
             nav.tryMove(loc);
         }else if(!rc.isCurrentlyHoldingUnit() && enemyHQ!=null && rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)){
-                    nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));

@@ -1,12 +1,10 @@
-package colin;
+package team10pdx;
 import battlecode.common.*;
-import colin.Util;
 
 import java.util.Random;
 
 import static battlecode.common.Direction.*;
 import static java.lang.StrictMath.abs;
-import static java.lang.StrictMath.cbrt;
 
 public class Navigation {
     RobotController rc;
@@ -18,14 +16,12 @@ public class Navigation {
     }
 
     public Direction getRandomDiagonal(){
-        Random rand = new Random();
-        int choice = rand.nextInt(3); //random int 0-3
+        int choice = (int) (Math.random() * Util.diagonals.length); //random int 0-3
         return Util.diagonals[choice];
     }
 
     public Direction getNextDiagonal(Direction dir){
-        Random rand = new Random();
-        int choice = rand.nextInt(3);
+        int choice = (int) (Math.random() * Util.diagonals.length);
         switch(dir){
             case SOUTHEAST:
                 if(rc.canMove(SOUTH) && rc.canMove(SOUTHWEST)){

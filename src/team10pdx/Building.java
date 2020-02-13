@@ -1,7 +1,6 @@
-package colin;
+package team10pdx;
 
 import battlecode.common.*;
-import colin.Robot;
 
 public class Building extends Robot {
 

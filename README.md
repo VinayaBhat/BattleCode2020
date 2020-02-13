@@ -16,7 +16,7 @@ This is the Battlecode 2020 scaffold, containing an `examplefuncsplayer`. Read h
 - `client/`
     Contains the client.
 - `build/`
-    Contains compiled player code and other artifacts of the build process. Can be safely ignored.
+    Contains compiled team10pdx code and other artifacts of the build process. Can be safely ignored.
 - `matches/`
     The output folder for match files.
 - `maps/`

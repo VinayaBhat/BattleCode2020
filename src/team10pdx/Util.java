@@ -1,4 +1,4 @@
-package colin;
+package team10pdx;
 import battlecode.common.*;
 
 // This is a file to accumulate all the random helper functions
