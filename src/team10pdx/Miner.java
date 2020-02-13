@@ -36,9 +36,8 @@ public class Miner extends Unit {
            MapLocation loc = rc.getLocation().add(dir);
            if(rc.canSenseLocation(loc))
                if(rc.senseFlooding(loc) && !waterLocations.contains(loc)){
-                   int[] message={comms.teamId,10,loc.x,loc.y,0,0,0};
-                   if(rc.canSubmitTransaction(message,3)){
-                       rc.submitTransaction(message,3);
+                   if(rc.getTeamSoup()>3){
+                       comms.broadcastWaterLocation(loc);
                        waterLocations.add(loc);
                    }
                }
@@ -227,11 +226,9 @@ public class Miner extends Unit {
                 System.out.println("trying to mine in "+dir);
                 if (tryMine(dir)) {
                     MapLocation soupLoc = rc.getLocation().add(dir);
-                    if (!soupLocations.contains(soupLoc)) {
-                        System.out.println("adding soup location ["+soupLoc.x+","+soupLoc.y+"]");
-                        int[] message = {comms.teamId, 2, soupLoc.x, soupLoc.y, 0,0,0};
+                    if (!soupLocations.contains(soupLoc) && rc.getTeamSoup()>4) {
+                        comms.broadcastSoupLocation(soupLoc);
                         soupLocations.add(soupLoc);
-                        rc.submitTransaction(message, 1);
                     }
                 }
         }
@@ -273,12 +270,11 @@ public class Miner extends Unit {
                 RobotInfo[] robots = rc.senseNearbyRobots();
                 for(RobotInfo robot : robots){
                     if(robot.getType()==RobotType.FULFILLMENT_CENTER){
-                            /*
-                            Transmit the fulfillment center x and y
-                             */
+                        /*
+                        Transmit the fulfillment center x and y
+                         */
                         MapLocation location = robot.getLocation();
-                        int[] message = {comms.teamId, 8, location.x, location.y, 0, 0, 0};
-                        rc.submitTransaction(message, 2);
+                        comms.broadcastFulfillmentCenterLocation(location);
                     }
                 }
 
@@ -426,9 +422,8 @@ public class Miner extends Unit {
                 //location around robot but could not mine.
                 int soupAmount = rc.senseSoup(soupLoc);
                 if(soupAmount==0){
-                    int[] message = {comms.teamId, 3, soupLoc.x, soupLoc.y, 0,0,0};
                     if(rc.getTeamSoup()>4){
-                        rc.submitTransaction(message, 3);
+                        comms.broadcastSoupLocation(soupLoc);
                         System.out.println("Submitted transaction to remove soup");
                     }
                 }
@@ -468,8 +463,7 @@ public class Miner extends Unit {
                 for(RobotInfo robot : robots){
                     if(robot.getType()==RobotType.DESIGN_SCHOOL){
                         MapLocation location = robot.getLocation();
-                        int[] message = {comms.teamId, 4, location.x, location.y, 0,0,0};
-                        rc.submitTransaction(message, 5);
+                        comms.broadcastDesignSchoolLocation(location);
                     }
                 }
             }
@@ -491,8 +485,7 @@ public class Miner extends Unit {
                     if (robot.type == RobotType.REFINERY) {
                         System.out.println("sending refinery location");
                         MapLocation location = robot.getLocation();
-                        int[] refineryLocationTransaction = {comms.teamId, 1, location.x, location.y, 0, 0, 0};
-                        rc.submitTransaction(refineryLocationTransaction, 20);
+                        comms.broadcastRefineryLocation(location);
                     }
                 }
             } else {
