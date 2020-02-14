@@ -20,6 +20,7 @@ class MessageWaiting {
 public class HQ extends Shooter {
     int numMiners = 0;
     int maxMiners = 8;
+    int refineryBroadcasts = 0;
     ArrayList<MapLocation> refineries = new ArrayList<>();
     ArrayList<Integer> mainLandscapers = new ArrayList<>();
     ArrayList<Integer> secondaryLandscapers = new ArrayList<>();
@@ -48,6 +49,7 @@ public class HQ extends Shooter {
                 newTransaction = q.peek();
                 if(rc.getTeamSoup()>newTransaction.price){
                     MessageWaiting mes = q.remove();
+                    System.out.println("sending "+mes.message);
                     rc.submitTransaction(mes.message, mes.price);
                 }
             }
@@ -115,13 +117,19 @@ public class HQ extends Shooter {
                         MapLocation newRefinery = new MapLocation(message[2], message[3]);
                         refineries.add(newRefinery);
                         int[] mes = {comms.teamId, 1, newRefinery.x, newRefinery.y, 0, 0, 0};
-                        if(rc.getTeamSoup()>5){
-                            rc.submitTransaction(mes, 3);
+                        if(rc.getTeamSoup()>5 && refineryBroadcasts<4){
+                            System.out.println("broadcasting refinery again");
+                            refineryBroadcasts++;
+                            comms.broadcastRefineryLocation(newRefinery);
                         }
-                        else {
+                        else if (refineryBroadcasts<3){
+                            refineryBroadcasts++;
                             System.out.println("Adding to Q");
                             MessageWaiting messageWaiting = new MessageWaiting(mes, 1);
                             q.add(messageWaiting);
+                        }
+                        else{
+                            System.out.println("Dont send refinery location");
                         }
                         break;
                     case 2:
@@ -140,14 +148,6 @@ public class HQ extends Shooter {
                         //New Landscaper
                         System.out.println("New Landscaper");
                         //broadcast the HQ location for the landscaper
-                        int[] trans = {comms.teamId, 0, rc.getLocation().x, rc.getLocation().y, 0, 0, 0};
-                        if(rc.getTeamSoup()>7){
-                            rc.submitTransaction(trans, 3);
-                        }else{
-                            System.out.println("adding to Q");
-                            MessageWaiting messageWaiting = new MessageWaiting(trans, 3);
-                            q.add(messageWaiting);
-                        }
                         break;
                     case 6:
                         System.out.println("Landscaper Message");
@@ -159,14 +159,14 @@ public class HQ extends Shooter {
                             System.out.println("adding main");
                             mainLandscapers.add(message[4]);
                             //transmit its role
-                            int[] roleMessage = {comms.teamId, 7, message[4], 0, 0, 0, 0};
                             //make sure you have enough soup
                             if(rc.getTeamSoup()>5){
-                                rc.submitTransaction(roleMessage, 2);
+                                comms.broadcastLandscaperRole(0);
                             }
                             else{
                                 //add to the Queue if not enough soup
                                 System.out.println("adding to Q");
+                                int[] roleMessage = {comms.teamId, 7, message[4], 0, 0, 0, 0};
                                 MessageWaiting messageWaiting = new MessageWaiting(roleMessage, 3);
                                 q.add(messageWaiting);
                             }
@@ -178,7 +178,7 @@ public class HQ extends Shooter {
                             int[] roleMessage = {comms.teamId, 7, message[4], 1, 0, 0, 0};
                             //make sure you have enough soup
                             if(rc.getTeamSoup()>5){
-                                rc.submitTransaction(roleMessage, 2);
+                                comms.broadcastLandscaperRole(1);
                             }
                             else{
                                 //add to the Queue if not enough soup
