@@ -41,6 +41,17 @@ public class Miner extends Unit {
             getHQLocation();
         }
 
+        for(Direction dir:Util.directions){
+            MapLocation loc = rc.getLocation().add(dir);
+            if(rc.canSenseLocation(loc))
+                if(rc.senseFlooding(loc) && !waterLocations.contains(loc)){
+                    if(rc.getTeamSoup()>3){
+                        comms.broadcastWaterLocation(loc);
+                        waterLocations.add(loc);
+                    }
+                }
+        }
+
         //Miners trying to sense water
         for(Direction dir:Util.directions){
             MapLocation loc = rc.getLocation().add(dir);
