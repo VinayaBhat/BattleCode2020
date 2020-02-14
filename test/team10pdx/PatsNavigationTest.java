@@ -47,7 +47,7 @@ public class PatsNavigationTest {
         Util.randomNumber();
         Util.randomDirection();
    }
-
+/*
     Robot rob = new Robot(rc);
     Building refinerytester = new Refinery(rc);
     Building designschooltester = new DesignSchool(rc);
@@ -74,7 +74,7 @@ public class PatsNavigationTest {
         int taketurn = fulfillmentcentertester.turnCount;
         assertEquals(0, taketurn);
     }
-
+*/
    @Test(expected = Exception.class)
     public void Robot() throws GameActionException {
         RobotController rc1=new RobotController() {
