@@ -12,7 +12,7 @@ public class Miner extends Unit {
     ArrayList<MapLocation> waterLocations = new ArrayList<>();
     boolean fulfillmentCenterCreated = false;
     boolean firstVaporatorCreated = false;
-    int [] vaporator_checker = new int [3];
+    int [] vaporator_checker = {0, 0, 0};
     int numDesignSchools = 0;
     int maxDesignSchools = 1;
     int numLandscapers = 0;
@@ -31,7 +31,7 @@ public class Miner extends Unit {
 
         System.out.println("ID: "+rc.getID()+" soup: "+rc.getSoupCarrying());
         System.out.println("Diag: "+diagonalMovementCount);
-        System.out.println("num vaporators is "+ numVaporators + " and refinery size is " + refineries.size());
+        System.out.println("num vaporators is "+ numVaporators + " and refinery size is " + refineries.size() + "and vapcheck is: " + vaporator_checker[0] + " " + vaporator_checker[1] + " " + vaporator_checker[2]);
 
 
         //get HQ Location when first made.
@@ -80,13 +80,13 @@ public class Miner extends Unit {
             Build a Fulfillment Center
              */
             System.out.println("In Fulfillment");
-            buildFulfillmentCenterOrFirstVaporator(0);
+            buildFulfillmentCenterOrVaporator(0);
             diagonalMovementCount = 0;
         }
-        else if(build_vaporator == true && !firstVaporatorCreated || build_vaporator == true && numVaporators <= refineries.size() && numVaporators < 3){
+        else if(build_vaporator == true && !firstVaporatorCreated || build_vaporator == true && numVaporators <= refineries.size()){
             /// build first vaporator near HQ
-            System.out.println("attempting to build first vaporator");
-            buildFulfillmentCenterOrFirstVaporator(1);
+            System.out.println("attempting to build vaporator");
+            buildFulfillmentCenterOrVaporator(1);
             diagonalMovementCount = 0;
         }
 
@@ -231,8 +231,10 @@ public class Miner extends Unit {
                     case 11:
                         firstVaporatorCreated = true;
                         numVaporators++;
-                        int cross_off = mes[4];
-                        vaporator_checker[cross_off] = -1;
+                        if (mes[4] >= 0) {
+                            int cross_off = mes[4];
+                            vaporator_checker[cross_off] = -1;
+                        }
                         System.out.println("Vaporator created");
                         break;
 
@@ -286,11 +288,18 @@ public class Miner extends Unit {
         }
     }
 
-    private void buildFulfillmentCenterOrFirstVaporator(int indicator) throws GameActionException {
-        int index = numVaporators - 1;
+    private void buildFulfillmentCenterOrVaporator(int indicator) throws GameActionException {
         boolean within_hq = nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1) && numVaporators == 0;
-        boolean within_first_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(0), 2) && !nav.inRadius(rc.getLocation(), refineries.get(0), 1);
-        boolean within_second_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(1), 2) && !nav.inRadius(rc.getLocation(), refineries.get(1), 1);
+        boolean within_first_refinery = false;
+        boolean within_second_refinery = false;
+        if (refineries.size()  == 1) {
+            within_first_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(0), 2) && !nav.inRadius(rc.getLocation(), refineries.get(0), 1);
+        }
+        else if (refineries.size() == 2){
+            within_first_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(0), 2) && !nav.inRadius(rc.getLocation(), refineries.get(0), 1);
+            within_second_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(1), 2) && !nav.inRadius(rc.getLocation(), refineries.get(1), 1);
+
+        }
         if (indicator == 0 && within_hq == true) {
                 /*
                 Build Fulfillment
