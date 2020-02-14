@@ -46,6 +46,38 @@ public class Communications {
             rc.submitTransaction(message, 3);
     }
 
+    public void broadcastRefineryLocation(MapLocation location) throws GameActionException {
+        int[] refineryLocationTransaction = {teamId, 1, location.x, location.y, 0, 0, 0};
+        if(rc.canSubmitTransaction(refineryLocationTransaction, 2)){
+            rc.submitTransaction(refineryLocationTransaction, 2);
+        }
+    }
+
+    public void broadcastDesignSchoolLocation(MapLocation location) throws GameActionException {
+        int[] message = {teamId, 4, location.x, location.y, 0,0,0};
+        if(rc.canSubmitTransaction(message, 2)){
+            rc.submitTransaction(message, 2);
+        }
+    }
+
+    public void broadcastLandscaperCreation(){
+
+    }
+
+    public void broadcastFulfillmentCenterLocation(MapLocation loc) throws GameActionException {
+        int[] message = {
+                teamId,
+                8,
+                loc.x,
+                loc.y,
+                0,
+                0,
+                0 };
+        if(rc.canSubmitTransaction(message, 2)){
+            rc.submitTransaction(message, 2);
+        }
+    }
+
     public MapLocation getHqLocFromBlockchain() throws GameActionException {
         for (int i = 1; i < rc.getRoundNum(); i++) {
             for (Transaction tx : rc.getBlock(i)) {
@@ -88,15 +120,36 @@ public class Communications {
         return count;
     }
 
+    public void broadcastLandscaperRole(int role) throws GameActionException {
+        int[] roleMessage = {teamId, 7, role, 0, 0, 0, 0};
+        if(rc.canSubmitTransaction(roleMessage, 1)){
+            rc.submitTransaction(roleMessage, 1);
+        }
+    }
+
     public void broadcastSoupLocation(MapLocation loc) throws GameActionException {
         int[] message = new int[7];
         message[0] = teamId;
         message[1] = 2;
         message[2] = loc.x; // x coord of HQ
         message[3] = loc.y; // y coord of HQ
-        if (rc.canSubmitTransaction(message, 3)) {
-            rc.submitTransaction(message, 3);
+        if (rc.canSubmitTransaction(message, 2)) {
+            rc.submitTransaction(message, 2);
             System.out.println("new soup!" + loc);
+        }
+    }
+
+    public void broadcastWaterLocation(MapLocation loc) throws GameActionException {
+        int[] message = {
+                teamId,
+                10,
+                loc.x,
+                loc.y,
+                0,
+                0,
+                0 };
+        if(rc.canSubmitTransaction(message, 3)){
+            rc.submitTransaction(message, 3);
         }
     }
 
