@@ -14,6 +14,6 @@ public class Vaporator extends Building {
         MapLocation vaporatorlocation;
         vaporatorlocation = rc.getLocation();
         System.out.println("the vaporator is located at " + vaporatorlocation);
-        comms.broadcastCreation(vaporatorlocation, 12);
+        //comms.broadcastCreation(vaporatorlocation, 11);
     }
 }
