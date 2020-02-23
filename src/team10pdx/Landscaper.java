@@ -142,6 +142,8 @@ public class Landscaper extends Unit {
         if(hqLoc != null){
             if(nav.goTo(hqLoc)){
                 System.out.println("moving to HQ");
+            }else{
+                nav.tryMove(nav.randomDirection());
             }
         } else {
             if(nav.goTo(nav.randomDirection())){
@@ -151,12 +153,63 @@ public class Landscaper extends Unit {
     }
 
     void secondaryLandscapers() throws GameActionException {
-        if(role==0){
-            mainLandscapers();
+//        if(role==0){
+//            mainLandscapers();
+//        }
+//        else if(role==1){
+//            //do stuff
+//            System.out.println("I'm a secondary");
+//        }
+        // first, save HQ by trying to remove dirt from it
+        if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
+            Direction dirtohq = rc.getLocation().directionTo(hqLoc);
+            if(rc.canDigDirt(dirtohq)){
+                rc.digDirt(dirtohq);
+            }
         }
-        else if(role==1){
-            //do stuff
-            System.out.println("I'm a secondary");
+
+        if(rc.getDirtCarrying() == 0){
+            if(tryDig()){
+                System.out.println("dug");
+            };
+        }
+
+        MapLocation bestPlaceToBuildWall = null;
+        // find best place to build
+        if(hqLoc != null) {
+            int lowestElevation = 9999999;
+            for (Direction dir : Util.directions) {
+                MapLocation tileToCheck = hqLoc.add(dir);
+                if(rc.getLocation().distanceSquaredTo(tileToCheck) < 4
+                        && rc.canDepositDirt(rc.getLocation().directionTo(tileToCheck))) {
+                    if (rc.senseElevation(tileToCheck) < lowestElevation) {
+                        lowestElevation = rc.senseElevation(tileToCheck);
+                        bestPlaceToBuildWall = tileToCheck;
+                    }
+                }
+            }
+        }
+
+        if (Math.random() < 0.8){
+            // build the wall
+            if (bestPlaceToBuildWall != null) {
+                rc.depositDirt(rc.getLocation().directionTo(bestPlaceToBuildWall));
+                rc.setIndicatorDot(bestPlaceToBuildWall, 0, 255, 0);
+                System.out.println("building a wall");
+            }
+        }
+
+        // otherwise try to get to the hq
+        if(hqLoc != null){
+            if(nav.goTo(hqLoc)){
+                System.out.println("moving to HQ");
+            }else{
+                nav.tryMove(nav.randomDirection());
+            }
+        } else {
+            if(nav.goTo(nav.randomDirection())){
+                System.out.println("random move");
+            }
         }
     }
 
