@@ -119,17 +119,17 @@ public class Communications {
         return broadcastedCreation[cue];
     }
 
-//    // check the latest block for unit creation messages
-//    public int getnewBuildingCount(int cue) throws GameActionException {
-//        int count = 0;
-//        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
-//            int[] mess = tx.getMessage();
-//            if (mess[0] == teamId && mess[1] == cue) {
-//                count += 1;
-//            }
-//        }
-//        return count;
-//    }
+    // check the latest block for unit creation messages
+    public int getnewBuildingCount(int cue) throws GameActionException {
+        int count = 0;
+        for (Transaction tx : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] mess = tx.getMessage();
+            if (mess[0] == teamId && mess[1] == cue) {
+                count += 1;
+            }
+        }
+        return count;
+    }
 
     public boolean broadcastLandscaperRole(int role) throws GameActionException {
         boolean sent=false;

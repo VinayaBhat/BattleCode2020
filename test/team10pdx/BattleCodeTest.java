@@ -81,6 +81,7 @@ public class BattleCodeTest {
         assertEquals(commspy.broadcastLandscaperRole(1),true);
         assertEquals(commspy.broadcastSoupLocation(new MapLocation(4,4)),true);
         assertEquals(commspy.broadcastWaterLocation(new MapLocation(5,5)),true);
+        assertEquals(commspy.getnewBuildingCount(0),1);
         int[][] allMessages = {
                 {99999,0,0,0,0,0,0},
                 {-1,-1,-1,-1,-1,-1,-1},
