@@ -32,6 +32,7 @@ public class Unit extends Robot {
             for (RobotInfo robot : robots) {
                 if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
                     hqLoc = robot.location;
+                    break;
                 }
             }
             if(hqLoc == null) {
