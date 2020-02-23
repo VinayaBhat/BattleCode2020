@@ -27,15 +27,9 @@ public class DeliveryDrone extends Unit {
         Direction loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
 //Finding water location and enemy HQ
         int[][] messages = comms.findTeamMessagesInBlockChain();
-        getwaterlocationandenemyHQ(messages);
-
+        findwaterlocations(messages);
         //Trying to sense water location
-        for (Direction dir : Util.directions) {
-            if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))) {
-                if(!waterlc.contains(rc.getLocation().add(dir)))
-                    waterlc.add(rc.getLocation().add(dir));
-            }
-        }
+        sensewaterlocation();
 
         boolean enemypresent = false;
         RobotInfo[] ri = rc.senseNearbyRobots();
@@ -43,38 +37,9 @@ public class DeliveryDrone extends Unit {
 //         1.cow then carry it.
 //         2.enemy robot then carry it.
 //         3.enemyHQ found then broadcast it
-        for (RobotInfo info : ri) {
-            if (info.type == RobotType.COW && !rc.isCurrentlyHoldingUnit() && !alreadycarriedow) {
-                if (rc.canPickUpUnit(info.getID())) {
-                    rc.pickUpUnit(info.getID());
-                    alreadycarriedow = true;
-                    cow = true;
-                    break;
-                }
-            } else if (info.getTeam() == enemy && !rc.isCurrentlyHoldingUnit()) {
-                enemypresent = true;
-                if (rc.canPickUpUnit(info.getID())) {
-                    rc.pickUpUnit(info.getID());
-                    break;
-                }
-            } else if (info.getType() == RobotType.HQ && info.getTeam() == enemy && enemyHQ == null) {
-                System.out.println("ENEMY HQ FOUND");
-                enemyHQ = info.getLocation();
-                System.out.println("ENEMY LOCATION FOUND " + enemyHQ);
-                for (int i = 0; i < 10; i++) {
-                    nav.tryMove(rc.getLocation().directionTo(hqLoc));
-                }
-                int[] message = {comms.teamId, 11, enemyHQ.x, enemyHQ.y, 0, 0, 0};
-                if (rc.canSubmitTransaction(message, 5))
-                    rc.submitTransaction(message, 5);
-                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y + 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y + 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y - 15));
-                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y - 15));
-            } else if (info.getTeam() == enemy) {
-                enemypresent = true;
-            }
-        }
+        enemypresent=canPickUpRobotandEnemyPresent(ri);
+
+
 //        If not carrying anything and enemyHQ is found. try to find the danger zone
         if (!rc.isCurrentlyHoldingUnit() && enemyHQ != null) {
             boolean forbidden = false;
@@ -105,7 +70,6 @@ public class DeliveryDrone extends Unit {
 //       If carrying enemy
 //       if water location found then drop the enemy in water
 //       else move towards our HQ
-        System.out.println("HOWWWWWWWWWWWWWWWWWW MAAAANYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY WAAAAAAAAAAAAAAAAATERRRRRRRRRRRRRR " + waterlc.size());
         if (rc.isCurrentlyHoldingUnit() && !cow) {
             if (waterlc.size() > 0) {
                 int min = Integer.MAX_VALUE;
@@ -116,7 +80,6 @@ public class DeliveryDrone extends Unit {
                         water = temp;
                     }
                 }
-                System.out.println("MOVING TOWARDS WATER TO DROP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 nav.tryMove(rc.getLocation().directionTo(water));
                 if (rc.canSenseLocation(water)) {
                     if (rc.canDropUnit(rc.getLocation().directionTo(water))) {
@@ -153,11 +116,6 @@ public class DeliveryDrone extends Unit {
 
         }
 
-//            if(!rc.isCurrentlyHoldingUnit() && enemyHQ==null && movetowardsenemyafterdropping)
-//                nav.tryMove(loc);
-//            else if (!rc.isCurrentlyHoldingUnit() && enemyHQ==null && !movetowardsenemyafterdropping && !rc.canSenseLocation(hqLoc))
-//                nav.tryMove(nav.randomDirection());
-
 
         //If not holding anything then move towards enemy location
         if(!rc.isCurrentlyHoldingUnit() && enemypresent) {
@@ -175,7 +133,7 @@ public class DeliveryDrone extends Unit {
 
     }
 
-    public void getwaterlocationandenemyHQ(int[][] messages){
+    public int[][] findwaterlocations(int[][] messages) throws GameActionException {
         for (int[] m : messages) {
             if (m[1] == 11 && enemyHQ == null) {
                 enemyHQ = new MapLocation(m[2], m[3]);
@@ -189,7 +147,60 @@ public class DeliveryDrone extends Unit {
                     waterlc.add(new MapLocation(m[2],m[3]));
             }
         }
+        return messages;
+    }
+
+    public List<MapLocation> sensewaterlocation() throws GameActionException {
+        for (Direction dir : Util.directions) {
+            if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))) {
+                if (!waterlc.contains(rc.getLocation().add(dir)))
+                    waterlc.add(rc.getLocation().add(dir));
+            }
+        }
+        return waterlc;
+    }
+
+    public boolean canPickUpRobotandEnemyPresent(RobotInfo[] ri) throws GameActionException {
+        boolean enemypresent=false;
+        for (RobotInfo info : ri) {
+             if (info.getType() == RobotType.HQ && info.getTeam() == enemy && enemyHQ == null) {
+                System.out.println("ENEMY HQ FOUND");
+                enemyHQ = info.getLocation();
+                System.out.println("ENEMY LOCATION FOUND " + enemyHQ);
+                if(hqLoc!=null) {
+                    for (int i = 0; i < 10; i++) {
+                        nav.tryMove(rc.getLocation().directionTo(hqLoc));
+                    }
+                }
+                int[] message = {comms.teamId, 11, enemyHQ.x, enemyHQ.y, 0, 0, 0};
+                if (rc.canSubmitTransaction(message, 5))
+                    rc.submitTransaction(message, 5);
+                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y + 15));
+                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y + 15));
+                forbiddenloc.add(new MapLocation(enemyHQ.x - 15, enemyHQ.y - 15));
+                forbiddenloc.add(new MapLocation(enemyHQ.x + 15, enemyHQ.y - 15));
+            }
+            if (info.type == RobotType.COW && !rc.isCurrentlyHoldingUnit() && !alreadycarriedow) {
+                if (rc.canPickUpUnit(info.getID())) {
+                    rc.pickUpUnit(info.getID());
+                    alreadycarriedow = true;
+                    cow = true;
+                }
+            }
+            else if (info.getTeam() == enemy && !rc.isCurrentlyHoldingUnit()) {
+                enemypresent = true;
+                if (rc.canPickUpUnit(info.getID())) {
+                    rc.pickUpUnit(info.getID());
+                }
+            }  else if (info.getTeam() == enemy) {
+                enemypresent = true;
+            }
+        }
+        return enemypresent;
+    }
+
     }
 
 
-}
+
+

@@ -25,14 +25,14 @@ public class Unit extends Robot {
         findHQ();
     }
 
-    public void findHQ() throws GameActionException {
+    public MapLocation findHQ() throws GameActionException {
         if (hqLoc == null) {
             // search surroundings for HQ
             RobotInfo[] robots = rc.senseNearbyRobots();
             for (RobotInfo robot : robots) {
                 if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
                     hqLoc = robot.location;
-                    break;
+                    return hqLoc;
                 }
             }
             if(hqLoc == null) {
@@ -40,5 +40,6 @@ public class Unit extends Robot {
                 hqLoc = comms.getHqLocFromBlockchain();
             }
         }
+        return hqLoc;
     }
 }

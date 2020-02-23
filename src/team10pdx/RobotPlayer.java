@@ -18,7 +18,7 @@ public strictfp class RobotPlayer {
             case FULFILLMENT_CENTER: me = new FulFillmentcenter(rc);     break;
             case LANDSCAPER:         me = new Landscaper(rc);           break;
             case DELIVERY_DRONE:     me = new DeliveryDrone(rc);         break;
-            //case NET_GUN:            me = new Shooter(rc);      break;
+            case NET_GUN:            me = new Shooter(rc);      break;
         }
 
         while(true) {

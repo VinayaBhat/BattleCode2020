@@ -9,12 +9,29 @@ import battlecode.common.*;
 import battlecode.common.MapLocation;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class BattleCodeTest {
     RobotController shooter;
     RobotController comm;
     RobotController nav;
+    RobotController drone;
+    RobotController unit;
+    RobotController unit1;
+    RobotController ds;
+    RobotController fulfilment;
+
+    @Before
+    public void setUpFulFilment(){
+        fulfilment=mock(RobotController.class);
+    }
+
+    @Before
+    public void setUpDesignSchool(){
+        ds=mock(RobotController.class);
+    }
 
     @Before
     public void setupShooter() {
@@ -26,6 +43,15 @@ public class BattleCodeTest {
         when(shooter.senseNearbyRobots(GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED, Team.B)).thenReturn(enemy);
         when(shooter.canShootUnit(111)).thenReturn(true);
         when(shooter.canShootUnit(112)).thenReturn(true);
+    }
+    @Before
+    public void setupUnit() {
+        unit=mock(RobotController.class);
+        when(unit.getMapHeight()).thenReturn(64);
+        when(unit.getMapWidth()).thenReturn(64);
+        unit1=mock(RobotController.class);
+        when(unit1.getMapHeight()).thenReturn(64);
+        when(unit1.getMapWidth()).thenReturn(64);
     }
 
     @Before
@@ -57,6 +83,10 @@ public class BattleCodeTest {
         when(nav.canMove(Direction.SOUTH)).thenReturn(true);
         when(nav.canMove(Direction.SOUTHEAST)).thenReturn(true);
         when(nav.canMove(Direction.SOUTHWEST)).thenReturn(true);
+    }
+    @Before
+    public void setDrone(){
+        drone=mock(RobotController.class);
     }
 
     @Test
@@ -117,5 +147,98 @@ public class BattleCodeTest {
         assertEquals(Arrays.asList(Util.directions).contains(n.getNextDiagonal(Direction.SOUTHWEST)),true);
         assertEquals(Arrays.asList(Util.directions).contains(n.getNextDiagonal(Direction.EAST)),true);
 
+    }
+
+    @Test
+    public void UnitTestwithNoNearbyrobots() throws GameActionException {
+        when(unit.getTeam()).thenReturn(Team.A);
+        Unit u=new Unit(unit);
+        RobotInfo[] ri1=new RobotInfo[0];
+        when(unit.senseNearbyRobots()).thenReturn(ri1);
+        assertEquals(u.findHQ(),isNull());
+    }
+    @Test
+    public void UnitTestwithNearbyRobot() throws GameActionException {
+        when(unit1.getTeam()).thenReturn(Team.A);
+        RobotInfo[] ri=new RobotInfo[1];
+        ri[0] = new RobotInfo(121, Team.A, RobotType.HQ, 0, false, 0, 0, 0, new MapLocation(2, 2));
+        when(unit1.senseNearbyRobots()).thenReturn(ri);
+        Unit u1=new Unit(unit1);
+        assertEquals(u1.findHQ(),new MapLocation(2,2));
+        u1.takeTurn();
+
+    }
+
+    @Test
+    public void DeliveryDronetest() throws GameActionException {
+        when(drone.getTeam()).thenReturn(Team.A);
+        DeliveryDrone d=new DeliveryDrone(drone);
+        RobotInfo[] ri=new RobotInfo[1];
+        ri[0] = new RobotInfo(111, Team.B, RobotType.COW, 0, false, 0, 0, 0, new MapLocation(2, 2));
+        when(drone.isCurrentlyHoldingUnit()).thenReturn(false);
+        when(drone.canPickUpUnit(111)).thenReturn(true);
+        assertEquals(d.canPickUpRobotandEnemyPresent(ri),false);
+
+        Navigation n=new Navigation(nav);
+        RobotInfo[] ri2=new RobotInfo[2];
+        ri2[0] = new RobotInfo(111, Team.B, RobotType.MINER, 0, false, 0, 0, 0, new MapLocation(2, 2));
+        ri2[1] = new RobotInfo(111, Team.B, RobotType.HQ, 0, false, 0, 0, 0, new MapLocation(2, 2));
+        when(drone.isCurrentlyHoldingUnit()).thenReturn(false);
+        when(drone.canPickUpUnit(111)).thenReturn(true);
+        int[] message = {99999, 11, 10, 10, 0, 0, 0};
+        when(drone.canSubmitTransaction(message, 5)).thenReturn(true);
+        assertEquals(d.canPickUpRobotandEnemyPresent(ri2),true);
+        when(drone.isCurrentlyHoldingUnit()).thenReturn(true);
+        when(drone.canPickUpUnit(111)).thenReturn(false);
+        assertEquals(d.canPickUpRobotandEnemyPresent(ri2),true);
+
+        when(drone.getLocation()).thenReturn(new MapLocation(4,4));
+        when(drone.senseFlooding(new MapLocation(5,4))).thenReturn(true);
+        when(drone.canSenseLocation(new MapLocation(5,4))).thenReturn(true);
+        List<MapLocation> water=new ArrayList<>();
+        water.add(new MapLocation(5,4));
+        assertEquals(d.sensewaterlocation(),water);
+    }
+    @Test
+    public void Dronetest2() throws GameActionException {
+        when(drone.getTeam()).thenReturn(Team.A);
+        DeliveryDrone d=new DeliveryDrone(drone);
+        int[][] allMessages = {
+                {99999,11,2,2,0,0,0},
+                {99999,10,1,1,-0,0,0},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1}};
+        assertEquals(d.findwaterlocations(allMessages),allMessages);
+    }
+
+    @Test
+    public void DesignSchoolTest() throws GameActionException {
+        DesignSchool school=new DesignSchool(ds);
+        assertEquals(school.buildLandscapers(),false);
+        when(ds.canBuildRobot(RobotType.LANDSCAPER,Direction.NORTH)).thenReturn(true);
+        when(ds.getTeamSoup()).thenReturn(200);
+        when(school.tryBuild(RobotType.LANDSCAPER,Direction.NORTH)).thenReturn(true);
+        assertEquals(school.buildLandscapers(),true);
+        school.takeTurn();
+    }
+
+    @Test
+    public void FulfilmentCenterTest() throws GameActionException {
+        FulFillmentcenter f=new FulFillmentcenter(fulfilment);
+        int[][] allMessages = {
+                {99999,9,2,2,0,0,0},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1}};
+
+        assertEquals(f.findmaxdrones(allMessages),2);
+        when(fulfilment.canBuildRobot(RobotType.DELIVERY_DRONE,Direction.NORTH)).thenReturn(true);
+        assertEquals(f.builddrones(),3);
     }
 }

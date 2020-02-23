@@ -23,12 +23,23 @@ public class FulFillmentcenter extends Building {
 
 
         int[][] messagesfromblockchain=comms.findTeamMessagesInBlockChain();
-        for(int[] m:messagesfromblockchain){
+        findmaxdrones(messagesfromblockchain);
+        builddrones();
+
+
+
+    }
+
+    public int findmaxdrones(int[][] messages){
+        for(int[] m:messages){
             if(m[1]==9){
                 maxdrones=m[2];
             }
         }
+        return maxdrones;
+    }
 
+    public int builddrones() throws GameActionException {
         if(maxdrones<4) {
             for(Direction dir:Util.directions) {
                 if (rc.canBuildRobot(RobotType.DELIVERY_DRONE, dir)) {
@@ -42,7 +53,6 @@ public class FulFillmentcenter extends Building {
             }
 
         }
-
-
+        return maxdrones;
     }
 }
