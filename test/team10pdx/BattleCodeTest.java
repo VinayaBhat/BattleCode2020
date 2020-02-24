@@ -18,6 +18,7 @@ public class BattleCodeTest {
     RobotController comm;
     RobotController nav;
     RobotController drone;
+    RobotController drone1;
     RobotController unit;
     RobotController unit1;
     RobotController ds;
@@ -87,6 +88,7 @@ public class BattleCodeTest {
     @Before
     public void setDrone(){
         drone=mock(RobotController.class);
+        drone1=mock(RobotController.class);
     }
 
     @Test
@@ -198,6 +200,16 @@ public class BattleCodeTest {
         List<MapLocation> water=new ArrayList<>();
         water.add(new MapLocation(5,4));
         assertEquals(d.sensewaterlocation(),water);
+
+        when(drone.isCurrentlyHoldingUnit()).thenReturn(false);
+        when(drone.getLocation()).thenReturn(new MapLocation(4,4));
+        assertEquals(d.ifnotholdingunitandenemyHQnotfound(Direction.NORTH),false);
+
+        when(drone.isCurrentlyHoldingUnit()).thenReturn(true);
+        when(drone.canDropUnit(Direction.NORTH)).thenReturn(true);
+        assertEquals(d.isHoldingCow(true,Direction.NORTH),false);
+        d.cow=true;
+        assertEquals(d.isHoldingCow(false,Direction.NORTH),true);
     }
     @Test
     public void Dronetest2() throws GameActionException {
@@ -212,6 +224,7 @@ public class BattleCodeTest {
                 {-1,-1,-1,-1,-1,-1,-1},
                 {-1,-1,-1,-1,-1,-1,-1}};
         assertEquals(d.findwaterlocations(allMessages),allMessages);
+
     }
 
     @Test
@@ -240,5 +253,49 @@ public class BattleCodeTest {
         assertEquals(f.findmaxdrones(allMessages),2);
         when(fulfilment.canBuildRobot(RobotType.DELIVERY_DRONE,Direction.NORTH)).thenReturn(true);
         assertEquals(f.builddrones(),3);
+    }
+
+    @Test
+    public void DroneTest() throws GameActionException {
+        when(drone1.getTeam()).thenReturn(Team.A);
+        DeliveryDrone dr=new DeliveryDrone(drone1);
+        dr.hqLoc=new MapLocation(2,2);
+        when(drone1.isCurrentlyHoldingUnit()).thenReturn(true);
+
+        int[][] allMessages = {
+                {99999,11,2,2,0,0,0},
+                {99999,10,1,1,-0,0,0},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1},
+                {-1,-1,-1,-1,-1,-1,-1}};
+        assertEquals(dr.findwaterlocations(allMessages),allMessages);
+        when(drone1.getLocation()).thenReturn(new MapLocation(2,2));
+        when(drone1.canSenseLocation(new MapLocation(1,1))).thenReturn(true);
+        when(drone1.canDropUnit(drone1.getLocation().directionTo(new MapLocation(1,1)))).thenReturn(true);
+        assertEquals(dr.isHoldingEnemyUnit(),true);
+
+    }
+
+    @Test
+    public void DroneTest2() throws GameActionException {
+        when(drone1.getTeam()).thenReturn(Team.A);
+        DeliveryDrone d=new DeliveryDrone(drone1);
+        assertEquals(d.notHoldingUnit(true,Direction.NORTH),true);
+        d.movetowardsenemyafterdropping=true;
+        assertEquals(d.notHoldingUnit(false,Direction.NORTH),true);
+        d.movetowardsenemyafterdropping=false;
+        d.enemyHQ=new MapLocation(2,2);
+        when(drone1.getLocation()).thenReturn(new MapLocation(1,1));
+        Navigation nav=new Navigation(drone1);
+        when( nav.tryMove(nav.oppositeDirection(drone1.getLocation().directionTo(d.enemyHQ)))).thenReturn(true);
+        assertEquals(d.notHoldingUnit(false,Direction.NORTH),true);
+        when(drone1.isCurrentlyHoldingUnit()).thenReturn(true);
+        when(nav.tryMove(Direction.NORTH)).thenReturn(true);
+        assertEquals(d.notHoldingUnit(false,Direction.NORTH),true);
+
+
+
     }
 }

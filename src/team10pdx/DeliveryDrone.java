@@ -39,97 +39,21 @@ public class DeliveryDrone extends Unit {
 //         3.enemyHQ found then broadcast it
         enemypresent=canPickUpRobotandEnemyPresent(ri);
 
-
+        ifnotholdingunitandenemyHQnotfound(loc);
 //        If not carrying anything and enemyHQ is found. try to find the danger zone
-        if (!rc.isCurrentlyHoldingUnit() && enemyHQ != null) {
-            boolean forbidden = false;
-            for (MapLocation mp : forbiddenloc) {
-                if (rc.getLocation().isWithinDistanceSquared(mp, GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED + 10)) {
-                    forbidden = true;
-                }
-            }
-            if (!forbidden) {
-                nav.tryMove(loc);
-            } else {
-                nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
-            }
-        }
+
 //        If carrying cow and near enemy location then drop it
-        if (rc.isCurrentlyHoldingUnit() && cow) {
-            if (enemypresent) {
-                for (Direction dir : Util.directions) {
-                    if (rc.canDropUnit(dir)) {
-                        rc.dropUnit(dir);
-                        cow = false;
-                    }
-                }
-            } else {
-                nav.tryMove(loc);
-            }
-        }
+        isHoldingCow(enemypresent,loc);
 //       If carrying enemy
 //       if water location found then drop the enemy in water
 //       else move towards our HQ
-        if (rc.isCurrentlyHoldingUnit() && !cow) {
-            if (waterlc.size() > 0) {
-                int min = Integer.MAX_VALUE;
-                MapLocation water = waterlc.get(0);
-                for (MapLocation temp : waterlc) {
-                    if (rc.getLocation().distanceSquaredTo(temp) < min) {
-                        min = rc.getLocation().distanceSquaredTo(temp);
-                        water = temp;
-                    }
-                }
-                nav.tryMove(rc.getLocation().directionTo(water));
-                if (rc.canSenseLocation(water)) {
-                    if (rc.canDropUnit(rc.getLocation().directionTo(water))) {
-                        rc.dropUnit(rc.getLocation().directionTo(water));
-                        movetowardsenemyafterdropping = true;
-                    }
-                }
-            } else {
-                if (nearHQ == null) {
-                    nearHQ = new MapLocation(hqLoc.x + Util.randomNumber(), hqLoc.y + Util.randomNumber());
-                }
-                System.out.println("Moving towards HQ TO DROP !!!!!!!!!!!!!!!!!!!!!!!!!");
+        isHoldingEnemyUnit();
 
-                if (!nav.tryMove(rc.getLocation().directionTo(nearHQ)))
-                    nav.tryMove(nav.randomDirection());
-
-                if (rc.canSenseLocation(nearHQ)) {
-                    for (Direction dir : Util.directions) {
-                        if (rc.canDropUnit(dir))
-                            rc.dropUnit(dir);
-                    }
-                }
-
-                for (Direction dir : Util.directions) {
-                    if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))) {
-                        waterlc.add(rc.getLocation().add(dir));
-//                            if(rc.canDropUnit(dir)){
-//                                rc.dropUnit(dir);
-//                                movetowardsenemyafterdropping=true;
-//                            }
-                    }
-                }
-            }
-
-        }
 
 
         //If not holding anything then move towards enemy location
-        if(!rc.isCurrentlyHoldingUnit() && enemypresent) {
-            nav.tryMove(nav.randomDirection());
-        }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping) {
-            nav.tryMove(loc);
-        }else if(!rc.isCurrentlyHoldingUnit() && enemyHQ!=null && rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)){
-            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
-            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
-            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
-            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
-        }else{
-            nav.tryMove(loc);
-        }
+        notHoldingUnit(enemypresent,loc);
+
 
     }
 
@@ -197,6 +121,105 @@ public class DeliveryDrone extends Unit {
             }
         }
         return enemypresent;
+    }
+
+    public boolean ifnotholdingunitandenemyHQnotfound(Direction loc) throws GameActionException {
+        boolean forbidden = false;
+        if (!rc.isCurrentlyHoldingUnit() && enemyHQ != null) {
+            for (MapLocation mp : forbiddenloc) {
+                if (rc.getLocation().isWithinDistanceSquared(mp, GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED + 10)) {
+                    forbidden = true;
+                }
+            }
+            if (!forbidden) {
+                nav.tryMove(loc);
+            } else {
+                nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            }
+        }
+        return forbidden;
+    }
+
+    public boolean isHoldingCow(boolean enemypresent,Direction loc) throws GameActionException {
+        if (rc.isCurrentlyHoldingUnit() && cow) {
+            if (enemypresent) {
+                for (Direction dir : Util.directions) {
+                    if (rc.canDropUnit(dir)) {
+                        rc.dropUnit(dir);
+                        cow = false;
+                    }
+                }
+            } else {
+                nav.tryMove(loc);
+            }
+        }
+        return cow;
+    }
+
+    public boolean isHoldingEnemyUnit() throws GameActionException {
+        if (rc.isCurrentlyHoldingUnit() && !cow) {
+            if (waterlc.size() > 0) {
+                int min = Integer.MAX_VALUE;
+                MapLocation water = waterlc.get(0);
+                for (MapLocation temp : waterlc) {
+                    if (rc.getLocation().distanceSquaredTo(temp) < min) {
+                        min = rc.getLocation().distanceSquaredTo(temp);
+                        water = temp;
+                    }
+                }
+                nav.tryMove(rc.getLocation().directionTo(water));
+                if (rc.canSenseLocation(water)) {
+                    if (rc.canDropUnit(rc.getLocation().directionTo(water))) {
+                        rc.dropUnit(rc.getLocation().directionTo(water));
+                        movetowardsenemyafterdropping = true;
+                    }
+                }
+            } else {
+                if (nearHQ == null) {
+                    nearHQ = new MapLocation(hqLoc.x + Util.randomNumber(), hqLoc.y + Util.randomNumber());
+                }
+                System.out.println("Moving towards HQ TO DROP !!!!!!!!!!!!!!!!!!!!!!!!!");
+
+                if (!nav.tryMove(rc.getLocation().directionTo(nearHQ)))
+                    nav.tryMove(nav.randomDirection());
+
+                if (rc.canSenseLocation(nearHQ)) {
+                    for (Direction dir : Util.directions) {
+                        if (rc.canDropUnit(dir))
+                            rc.dropUnit(dir);
+                    }
+                }
+
+                for (Direction dir : Util.directions) {
+                    if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))) {
+                        waterlc.add(rc.getLocation().add(dir));
+                    }
+                }
+            }
+
+        }
+        return true;
+    }
+
+    public boolean notHoldingUnit(boolean enemypresent,Direction loc) throws GameActionException {
+        boolean moved=false;
+        if(!rc.isCurrentlyHoldingUnit() && enemypresent) {
+            nav.tryMove(nav.randomDirection());
+            moved=true;
+        }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping) {
+            nav.tryMove(loc);
+            moved=true;
+        }else if(!rc.isCurrentlyHoldingUnit() && enemyHQ!=null && rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)){
+            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            moved=true;
+        }else{
+            nav.tryMove(loc);
+            moved=true;
+        }
+        return moved;
     }
 
     }
