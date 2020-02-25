@@ -96,7 +96,7 @@ public class Miner extends Unit {
             buildFulfillmentCenterOrVaporator(0);
             diagonalMovementCount = 0;
         }
-        else if(build_vaporator == true && !firstVaporatorCreated || build_vaporator == true && numVaporators < (refineries.size()) && numVaporators > 0){
+        else if(build_vaporator == true && !firstVaporatorCreated && rc.getSoupCarrying() > 3 || build_vaporator == true && numVaporators < refineries.size() && rc.getSoupCarrying() > 3){ //&& numVaporators > 0){
             /// build first vaporator near HQ
             System.out.println("attempting to build vaporator");
             buildFulfillmentCenterOrVaporator(1);
@@ -301,7 +301,7 @@ public class Miner extends Unit {
         }
     }
 
-    private void buildFulfillmentCenterOrVaporator(int indicator) throws GameActionException {
+    public void buildFulfillmentCenterOrVaporator(int indicator) throws GameActionException {
         Direction d = null;
         boolean within_hq = nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1) && numVaporators == 0;
         boolean within_first_refinery = false;
@@ -349,12 +349,13 @@ public class Miner extends Unit {
                 System.out.println("built vaporator ");
                 if (numVaporators == 0) {
                     firstVaporatorCreated = true;
+
                 }
                 RobotInfo[] robots = rc.senseNearbyRobots();
                 for (RobotInfo robot : robots) {
                     if (robot.getType() == RobotType.VAPORATOR) {
                             /*
-                            Transmit the fulfillment center x and y
+                            Transmit the vaporator x and y
                              */
                         MapLocation location = robot.getLocation();
                         int[] message = {comms.teamId, 11, location.x, location.y, checker, 0, 0};
@@ -382,7 +383,7 @@ public class Miner extends Unit {
                                 d = rc.getLocation().directionTo(nearest_refinery);
                                 break;
                             } else if (vaporator_checker[i + 1] == -1) {
-                                if (i == 0 && refineries.size() == 2) {
+                                if (i == 0 && refineries.size() == maxRefineries) {
                                     nearest_refinery = refineries.get(1);
                                     break;
                                 } else if (i == 1 && refineries.size() == maxRefineries) {
@@ -399,7 +400,9 @@ public class Miner extends Unit {
                 if (nav.tryMove(d)) {
                 }
             }
+
         }
+
     }
 
 
