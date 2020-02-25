@@ -301,7 +301,7 @@ public class Miner extends Unit {
         }
     }
 
-    public void buildFulfillmentCenterOrVaporator(int indicator) throws GameActionException {
+    private void buildFulfillmentCenterOrVaporator(int indicator) throws GameActionException {
         Direction d = null;
         boolean within_hq = nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1) && numVaporators == 0;
         boolean within_first_refinery = false;
