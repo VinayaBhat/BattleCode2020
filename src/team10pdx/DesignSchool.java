@@ -8,15 +8,19 @@ public class DesignSchool extends Building {
     }
 
     static int totalnumLandscapers = 0;
-    static int maxLandscapers = 4;
+    static int maxLandscapers = 6;
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        buildLandscapers();
+    }
 
         /*
         First turn find all the open directions
         to place a landscaper
          */
+        public boolean buildLandscapers() throws GameActionException {
+            boolean built=false;
         int numOpen = 0;
         Direction[] openDirections = {null, null, null, null, null, null, null, null};
 
@@ -38,6 +42,7 @@ public class DesignSchool extends Building {
                 if(tryBuild(RobotType.LANDSCAPER, openDirections[i])){
                     //submit transaction for HQ to broadcast its location
                     totalnumLandscapers++;
+                    built=true;
 
                     int[] message = {comms.teamId, 5, totalnumLandscapers, 0, 0, 0, 0};
                     rc.submitTransaction(message, 4);
@@ -45,7 +50,7 @@ public class DesignSchool extends Building {
                 }
             }
         }
-        
+        return built;
     }
 }
 

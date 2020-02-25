@@ -15,7 +15,6 @@ public class PatsNavigationTest {
     }
 
     Navigation nav = new Navigation(rc);
-
     @Test
     public void testNearestLocation() {
         MapLocation location1 = new MapLocation(1, 1);
@@ -47,34 +46,7 @@ public class PatsNavigationTest {
         Util.randomNumber();
         Util.randomDirection();
    }
-/*
-    Robot rob = new Robot(rc);
-    Building refinerytester = new Refinery(rc);
-    Building designschooltester = new DesignSchool(rc);
-    Building fulfillmentcentertester = new FulFillmentcenter(rc);
 
-    @Test
-    public void RobotTakeTurnCount(){
-        int taketurn = rob.turnCount;
-        assertEquals(0, taketurn);
-    }
-
-    @Test
-    public void refineryTakeTurnCount(){
-        int taketurn = refinerytester.turnCount;
-        assertEquals(0, taketurn);
-    }
-    @Test
-    public void designSchoolTakeTurnCount(){
-        int taketurn = designschooltester.turnCount;
-        assertEquals(0, taketurn);
-    }
-    @Test
-    public void fulfillmentCenterTakeTurnCount(){
-        int taketurn = fulfillmentcentertester.turnCount;
-        assertEquals(0, taketurn);
-    }
-*/
    @Test(expected = Exception.class)
     public void Robot() throws GameActionException {
         RobotController rc1=new RobotController() {
@@ -378,5 +350,6 @@ public class PatsNavigationTest {
         m.buildDesignSchool();
 
    }
+
 
 }

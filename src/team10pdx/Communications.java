@@ -36,35 +36,43 @@ public class Communications {
         }
     }
 
-    public void sendHqLoc(MapLocation loc) throws GameActionException {
+    public boolean sendHqLoc(MapLocation loc) throws GameActionException {
+        boolean sent = false;
         int[] message = new int[7];
         message[0] = teamId;
         message[1] = 0;
         message[2] = loc.x; // x coord of HQ
         message[3] = loc.y; // y coord of HQ
-        if (rc.canSubmitTransaction(message, 3))
+        if (rc.canSubmitTransaction(message, 3)) {
+            sent=true;
             rc.submitTransaction(message, 3);
+        }
+        return sent;
     }
 
-    public void broadcastRefineryLocation(MapLocation location) throws GameActionException {
+    public boolean broadcastRefineryLocation(MapLocation location) throws GameActionException {
+        boolean sent=false;
         int[] refineryLocationTransaction = {teamId, 1, location.x, location.y, 0, 0, 0};
         if(rc.canSubmitTransaction(refineryLocationTransaction, 2)){
+            sent=true;
             rc.submitTransaction(refineryLocationTransaction, 2);
         }
+        return sent;
     }
 
-    public void broadcastDesignSchoolLocation(MapLocation location) throws GameActionException {
+    public boolean broadcastDesignSchoolLocation(MapLocation location) throws GameActionException {
+        boolean sent=false;
         int[] message = {teamId, 4, location.x, location.y, 0,0,0};
         if(rc.canSubmitTransaction(message, 2)){
+            sent=true;
             rc.submitTransaction(message, 2);
         }
+        return sent;
     }
 
-    public void broadcastLandscaperCreation(){
 
-    }
-
-    public void broadcastFulfillmentCenterLocation(MapLocation loc) throws GameActionException {
+    public boolean broadcastFulfillmentCenterLocation(MapLocation loc) throws GameActionException {
+        boolean sent=false;
         int[] message = {
                 teamId,
                 8,
@@ -74,8 +82,10 @@ public class Communications {
                 0,
                 0 };
         if(rc.canSubmitTransaction(message, 2)){
+            sent=true;
             rc.submitTransaction(message, 2);
         }
+        return sent;
     }
 
     public MapLocation getHqLocFromBlockchain() throws GameActionException {
@@ -93,8 +103,8 @@ public class Communications {
 
     public boolean[] broadcastedCreation = new boolean[15];
 
-    public void broadcastCreation(MapLocation loc, int cue) throws GameActionException {
-        if (broadcastedCreation[cue]) return; // don't re-broadcast
+    public boolean broadcastCreation(MapLocation loc, int cue) throws GameActionException {
+        if (broadcastedCreation[cue]) return false; // don't re-broadcast
         {
             int[] message = new int[7];
             message[0] = teamId;
@@ -106,6 +116,7 @@ public class Communications {
                 broadcastedCreation[cue] = true;
             }
         }
+        return broadcastedCreation[cue];
     }
 
     // check the latest block for unit creation messages
@@ -120,14 +131,18 @@ public class Communications {
         return count;
     }
 
-    public void broadcastLandscaperRole(int role) throws GameActionException {
+    public boolean broadcastLandscaperRole(int role) throws GameActionException {
+        boolean sent=false;
         int[] roleMessage = {teamId, 7, role, 0, 0, 0, 0};
         if(rc.canSubmitTransaction(roleMessage, 1)){
+            sent=true;
             rc.submitTransaction(roleMessage, 1);
         }
+        return sent;
     }
 
-    public void broadcastSoupLocation(MapLocation loc) throws GameActionException {
+    public boolean broadcastSoupLocation(MapLocation loc) throws GameActionException {
+        boolean sent=false;
         int[] message = new int[7];
         message[0] = teamId;
         message[1] = 2;
@@ -135,11 +150,14 @@ public class Communications {
         message[3] = loc.y; // y coord of HQ
         if (rc.canSubmitTransaction(message, 2)) {
             rc.submitTransaction(message, 2);
+            sent=true;
             System.out.println("new soup!" + loc);
         }
+        return sent;
     }
 
-    public void broadcastWaterLocation(MapLocation loc) throws GameActionException {
+    public boolean broadcastWaterLocation(MapLocation loc) throws GameActionException {
+        boolean sent=false;
         int[] message = {
                 teamId,
                 10,
@@ -149,8 +167,10 @@ public class Communications {
                 0,
                 0 };
         if(rc.canSubmitTransaction(message, 3)){
+            sent=true;
             rc.submitTransaction(message, 3);
         }
+        return sent;
     }
 
 
