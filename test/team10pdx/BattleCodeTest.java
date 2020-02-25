@@ -33,15 +33,14 @@ public class BattleCodeTest {
         when(landscaper.getTeam()).thenReturn(Team.A);
     }
     @Before
-    public void setupHQ(){
-        hq=mock(RobotController.class);
-        when(hq.getLocation()).thenReturn(new MapLocation(1,1));
+    public void setupHQ() {
+        hq = mock(RobotController.class);
+        when(hq.getLocation()).thenReturn(new MapLocation(1, 1));
         when(hq.getRoundNum()).thenReturn(3);
         when(hq.getTeam()).thenReturn(Team.A);
-
     }
 
-    @Before
+        @Before
     public void setUpFulFilment(){
         fulfilment=mock(RobotController.class);
     }
@@ -50,6 +49,7 @@ public class BattleCodeTest {
     public void setUpDesignSchool(){
         ds=mock(RobotController.class);
     }
+
 
     @Before
     public void setupShooter() {
@@ -417,4 +417,5 @@ public class BattleCodeTest {
         lsmock.takeTurn();
 
     }
+
 }
