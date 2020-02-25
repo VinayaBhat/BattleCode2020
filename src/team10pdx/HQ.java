@@ -68,7 +68,7 @@ public class HQ extends Shooter {
         }
     }
 
-    private void createMiner() throws GameActionException {
+    public boolean createMiner() throws GameActionException {
         boolean minerPlaced = false;
         MapLocation[] soupLocations = rc.senseNearbySoup();
 
@@ -90,13 +90,14 @@ public class HQ extends Shooter {
                 if (tryBuild(RobotType.MINER, Util.directions[i])) {
                     System.out.println("created miner randomly");
                     numMiners++;
-                    break;
+                    return minerPlaced;
                 }
             }
         }
+        return minerPlaced;
     }
 
-    private void dealWithBlockchainMessages() throws GameActionException {
+    public int[][]  dealWithBlockchainMessages() throws GameActionException {
         int[][] teamMessages = comms.findTeamMessagesInBlockChain();
 
         //loop through messages from our team
@@ -191,17 +192,18 @@ public class HQ extends Shooter {
                 }
             }
         }
+        return teamMessages;
     }
 
-    public void printLandscapers() {
-        System.out.println("Main Landscaper IDs: ");
-        for(int id : mainLandscapers){
-            System.out.println(" "+id);
-        }
-
-        System.out.println("Secondary Landscaper IDs: ");
-        for(int id : secondaryLandscapers){
-            System.out.println(" "+id);
-        }
-    }
+//    public void printLandscapers() {
+//        System.out.println("Main Landscaper IDs: ");
+//        for(int id : mainLandscapers){
+//            System.out.println(" "+id);
+//        }
+//
+//        System.out.println("Secondary Landscaper IDs: ");
+//        for(int id : secondaryLandscapers){
+//            System.out.println(" "+id);
+//        }
+//    }
 }

@@ -3,6 +3,7 @@ package team10pdx;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+
 import org.junit.Before;
 import org.junit.Test;
 import battlecode.common.*;
@@ -23,6 +24,22 @@ public class BattleCodeTest {
     RobotController unit1;
     RobotController ds;
     RobotController fulfilment;
+    RobotController hq;
+    RobotController landscaper;
+
+    @Before
+    public void setUpLandscaper(){
+        landscaper=mock(RobotController.class);
+        when(landscaper.getTeam()).thenReturn(Team.A);
+    }
+    @Before
+    public void setupHQ(){
+        hq=mock(RobotController.class);
+        when(hq.getLocation()).thenReturn(new MapLocation(1,1));
+        when(hq.getRoundNum()).thenReturn(3);
+        when(hq.getTeam()).thenReturn(Team.A);
+
+    }
 
     @Before
     public void setUpFulFilment(){
@@ -282,20 +299,122 @@ public class BattleCodeTest {
     public void DroneTest2() throws GameActionException {
         when(drone1.getTeam()).thenReturn(Team.A);
         DeliveryDrone d=new DeliveryDrone(drone1);
+        d.mapheight=64;
+        d.mapwidth=64;
+        when(drone1.getLocation()).thenReturn(new MapLocation(1,1));
+        d.hqLoc=new MapLocation(2,2);
+        d.enemyHQ=new MapLocation(2,2);
         assertEquals(d.notHoldingUnit(true,Direction.NORTH),true);
         d.movetowardsenemyafterdropping=true;
         assertEquals(d.notHoldingUnit(false,Direction.NORTH),true);
         d.movetowardsenemyafterdropping=false;
-        d.enemyHQ=new MapLocation(2,2);
-        when(drone1.getLocation()).thenReturn(new MapLocation(1,1));
+
         Navigation nav=new Navigation(drone1);
         when( nav.tryMove(nav.oppositeDirection(drone1.getLocation().directionTo(d.enemyHQ)))).thenReturn(true);
         assertEquals(d.notHoldingUnit(false,Direction.NORTH),true);
         when(drone1.isCurrentlyHoldingUnit()).thenReturn(true);
         when(nav.tryMove(Direction.NORTH)).thenReturn(true);
         assertEquals(d.notHoldingUnit(false,Direction.NORTH),true);
+    }
+
+    @Test
+    public void testHQ() throws GameActionException {
+        HQ hqt=new HQ(hq);
+        MapLocation[] soup=new MapLocation[1];
+        soup[0]=(new MapLocation(2,2));
+        when(hq.senseNearbySoup()).thenReturn(soup);
+        when(hqt.tryBuild(RobotType.MINER, Direction.SOUTHEAST)).thenReturn(true);
+        when(hqt.tryBuild(RobotType.MINER, Direction.SOUTH)).thenReturn(true);
+        assertEquals(hqt.createMiner(),false);
+        when(hqt.tryBuild(RobotType.MINER, Direction.NORTHEAST)).thenReturn(true);
+        assertEquals(hqt.createMiner(),true);
+    }
+
+    @Test
+    public void testHQ2() throws GameActionException {
+
+        HQ hqt=new HQ(hq);
+
+        Communications co=new Communications(hq);
+        Transaction[] tx=new Transaction[7];
+        tx[0]=new Transaction(1,new int[] {99999,0,0,0,0,0,0},1);
+        tx[1]=new Transaction(1,new int[] {99999,1,2,2,0,0,0},2);
+        tx[2]=new Transaction(1,new int[] {99999,2,3,3,0,0,0},3);
+        tx[3]=new Transaction(1,new int[] {99999,3,1,1,0,0,0},4);
+        tx[4]=new Transaction(1,new int[] {99999,4,0,0,0,0,0},5);
+        tx[5]=new Transaction(1,new int[] {99999,5,0,0,0,0,0},6);
+        tx[6]=new Transaction(1,new int[] {99999,6,0,0,0,0,0},7);
+        when(hq.getBlock(2)).thenReturn(tx);
+        hqt.dealWithBlockchainMessages();
+        when(hq.getTeamSoup()).thenReturn(6);
+        hqt.dealWithBlockchainMessages();
+        hqt.refineryBroadcasts=6;
+        hqt.dealWithBlockchainMessages();
+        ArrayList<Integer> mainLandscapers = new ArrayList<>();
+        mainLandscapers.add(1);
+        mainLandscapers.add(2);
+        mainLandscapers.add(3);
+        mainLandscapers.add(4);
+        mainLandscapers.add(5);
+        hqt.mainLandscapers=mainLandscapers;
+        hqt.dealWithBlockchainMessages();
+        when(hq.getTeamSoup()).thenReturn(4);
+        hqt.dealWithBlockchainMessages();
+        Transaction[] tx1=new Transaction[7];
+        tx1[0]=new Transaction(1,new int[] {-1,-1,0,0,0,0,0},1);
+        tx1[1]=new Transaction(1,new int[] {99999,1,2,2,0,0,0},2);
+        tx1[2]=new Transaction(1,new int[] {99999,2,3,3,0,0,0},3);
+        tx1[3]=new Transaction(1,new int[] {99999,3,1,1,0,0,0},4);
+        tx1[4]=new Transaction(1,new int[] {99999,4,0,0,0,0,0},5);
+        tx1[5]=new Transaction(1,new int[] {99999,5,0,0,0,0,0},6);
+        tx1[6]=new Transaction(1,new int[] {99999,6,0,0,0,0,0},7);
+        when(hq.getBlock(2)).thenReturn(tx1);
+        hqt.dealWithBlockchainMessages();
+
+    }
 
 
+    @Test(expected = Exception.class)
+    public void RobotPlayerTestHQ() throws GameActionException {
+        RobotController hq=mock(RobotController.class);
+        Communications com=new Communications(hq);
+        when(hq.getType()).thenReturn(RobotType.HQ);
+        RobotPlayer.run(hq);
+        RobotController miner=mock(RobotController.class);
+        when(miner.getType()).thenReturn(RobotType.MINER);
+        RobotPlayer.run(miner);
+    }
+
+    @Test
+    public void LandscaperTest() throws GameActionException {
+        Landscaper ls=new Landscaper(landscaper);
+        when(landscaper.getTeamSoup()).thenReturn(6);
+        when(landscaper.getID()).thenReturn(111);
+        when(landscaper.getLocation()).thenReturn(new MapLocation(1,1));
+        when(landscaper.getRoundNum()).thenReturn(3);
+
+        Transaction[] tx=new Transaction[7];
+        tx[0]=new Transaction(1,new int[] {99999,0,0,0,0,0,0},1);
+        tx[1]=new Transaction(1,new int[] {99999,1,2,2,0,0,0},2);
+        tx[2]=new Transaction(1,new int[] {99999,2,3,3,0,0,0},3);
+        tx[3]=new Transaction(1,new int[] {99999,3,1,1,0,0,0},4);
+        tx[4]=new Transaction(1,new int[] {99999,4,0,0,0,0,0},5);
+        tx[5]=new Transaction(1,new int[] {99999,5,0,0,0,0,0},6);
+        tx[6]=new Transaction(1,new int[] {99999,6,0,0,0,0,0},7);
+        when(landscaper.getBlock(2)).thenReturn(tx);
+        ls.main();
+        Transaction[] tx1=new Transaction[7];
+        tx1[0]=new Transaction(1,new int[] {99999,7,111,0,0,0,0},1);
+        tx1[1]=new Transaction(1,new int[] {-1,1,2,2,0,0,0},2);
+        tx1[2]=new Transaction(1,new int[] {-1,2,3,3,0,0,0},3);
+        tx1[3]=new Transaction(1,new int[] {-1,3,1,1,0,0,0},4);
+        tx1[4]=new Transaction(1,new int[] {-1,4,0,0,0,0,0},5);
+        tx1[5]=new Transaction(1,new int[] {-1,5,0,0,0,0,0},6);
+        tx1[6]=new Transaction(1,new int[] {-1,6,0,0,0,0,0},7);
+        when(landscaper.getBlock(2)).thenReturn(tx1);
+        ls.main();
+        Landscaper lsmock= Mockito.spy(ls);
+        lsmock.takeTurn();
 
     }
 }
