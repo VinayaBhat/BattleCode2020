@@ -23,8 +23,7 @@ public class BattleCodeTest {
     RobotController unit1;
     RobotController ds;
     RobotController fulfilment;
-    RobotController min;
-    RobotController vap;
+    
 
     @Before
     public void setUpFulFilment(){
@@ -34,26 +33,6 @@ public class BattleCodeTest {
     @Before
     public void setUpDesignSchool(){
         ds=mock(RobotController.class);
-    }
-
-    @Before
-    public void setUpVapor(){
-        vap=mock(RobotController.class);
-    }
-
-    @Before
-    public void setUpMiner(){
-        min=mock(RobotController.class);
-        when(min.canBuildRobot(RobotType.VAPORATOR, Direction.NORTH)).thenReturn(true);
-        when(min.canBuildRobot(RobotType.VAPORATOR, Direction.NORTHEAST)).thenReturn(true);
-        when(min.canBuildRobot(RobotType.VAPORATOR, Direction.NORTHWEST)).thenReturn(true);
-        when(min.canBuildRobot(RobotType.VAPORATOR, Direction.EAST)).thenReturn(true);
-        when(min.canBuildRobot(RobotType.VAPORATOR, Direction.SOUTH)).thenReturn(true);
-        when(min.canBuildRobot(RobotType.VAPORATOR, Direction.SOUTHEAST)).thenReturn(true);
-        when(min.canBuildRobot(RobotType.VAPORATOR, Direction.SOUTHWEST)).thenReturn(true);
-        when(min.canBuildRobot(RobotType.VAPORATOR, Direction.WEST)).thenReturn(true);
-
-
     }
 
 
@@ -321,22 +300,5 @@ public class BattleCodeTest {
 
 
     }
-/*
-    @Test
-    public void FirstVaporatorBuiltTest() throws GameActionException {
-        Vaporator vapey = new Vaporator(vap);
-        Miner mine = new Miner(min);
-        mine.firstVaporatorCreated = true;
-        System.out.println(vapey.turnCount);
-        assertEquals(vapey.turnCount,0);
-        //boolean tester = mine.buildFulfillmentCenterOrVaporator(1, mine.firstVaporatorCreated);
-        //boolean tester = mine.firstVaporatorCreated;
-        //when(min.canBuildRobot(RobotType.VAPORATOR,Direction.NORTH)).thenReturn(true);
-        //System.out.println(mine.buildFulfillmentCenterOrVaporator(1, mine.firstVaporatorCreated));
-        //assertEquals(mine.buildFulfillmentCenterOrVaporator(1, true),true);
 
-        //assertEquals(f.builddrones(),3);
-    }
-    
- */
 }
