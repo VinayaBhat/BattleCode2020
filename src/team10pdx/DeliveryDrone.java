@@ -127,7 +127,7 @@ public class DeliveryDrone extends Unit {
         boolean forbidden = false;
         if (!rc.isCurrentlyHoldingUnit() && enemyHQ != null) {
             for (MapLocation mp : forbiddenloc) {
-                if (rc.getLocation().isWithinDistanceSquared(mp, GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED + 10)) {
+                if (rc.getLocation().isWithinDistanceSquared(mp, GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED )) {
                     forbidden = true;
                 }
             }
@@ -206,9 +206,14 @@ public class DeliveryDrone extends Unit {
         if(!rc.isCurrentlyHoldingUnit() && enemypresent) {
             nav.tryMove(nav.randomDirection());
             moved=true;
-        }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping) {
+        }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping && enemyHQ==null) {
+            loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
             nav.tryMove(loc);
             moved=true;
+        }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping && enemyHQ!=null) {
+            loc = rc.getLocation().directionTo(new MapLocation(enemyHQ.x + Util.randomNumber(), enemyHQ.y + Util.randomNumber()));
+            nav.tryMove(loc);
+            moved = true;
         }else if(!rc.isCurrentlyHoldingUnit() && enemyHQ!=null && rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)){
             nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
@@ -216,6 +221,7 @@ public class DeliveryDrone extends Unit {
             nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             moved=true;
         }else{
+            loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
             nav.tryMove(loc);
             moved=true;
         }
