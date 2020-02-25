@@ -23,9 +23,23 @@ public class BattleCodeTest {
     RobotController unit1;
     RobotController ds;
     RobotController fulfilment;
-    
+    RobotController hq;
+    RobotController landscaper;
 
     @Before
+    public void setUpLandscaper(){
+        landscaper=mock(RobotController.class);
+        when(landscaper.getTeam()).thenReturn(Team.A);
+    }
+    @Before
+    public void setupHQ() {
+        hq = mock(RobotController.class);
+        when(hq.getLocation()).thenReturn(new MapLocation(1, 1));
+        when(hq.getRoundNum()).thenReturn(3);
+        when(hq.getTeam()).thenReturn(Team.A);
+    }
+
+        @Before
     public void setUpFulFilment(){
         fulfilment=mock(RobotController.class);
     }
