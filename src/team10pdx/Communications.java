@@ -101,7 +101,7 @@ public class Communications {
         return null;
     }
 
-    public boolean[] broadcastedCreation = new boolean[15];
+    public boolean[] broadcastedCreation = new boolean[4];
 
     public boolean broadcastCreation(MapLocation loc, int cue) throws GameActionException {
         if (broadcastedCreation[cue]) return false; // don't re-broadcast

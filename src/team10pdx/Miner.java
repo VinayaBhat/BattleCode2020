@@ -2,7 +2,6 @@ package team10pdx;
 import battlecode.common.*;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class Miner extends Unit {
 
@@ -21,7 +20,6 @@ public class Miner extends Unit {
     int maxDesignSchools = 1;
     int numLandscapers = 0;
     int diagonalMovementCount = 0;
-    int numVaporators = 0;
     MapLocation closestRefineLocation;
     Direction diagonalDirection;
 
@@ -29,43 +27,26 @@ public class Miner extends Unit {
         super(r);
     }
 
-
-
     public void takeTurn() throws GameActionException {
-
         System.out.println("ID: "+rc.getID()+" soup: "+rc.getSoupCarrying());
         System.out.println("Diag: "+diagonalMovementCount);
-        System.out.println("num vaporators is "+ numVaporators + " and refinery size is " + refineries.size() + "and vapcheck is: " + vaporator_checker[0] + " " + vaporator_checker[1] + " " + vaporator_checker[2]);
-
 
         //get HQ Location when first made.
         if(HQLocation==null){
             getHQLocation();
         }
 
-        for(Direction dir:Util.directions){
-            MapLocation loc = rc.getLocation().add(dir);
-            if(rc.canSenseLocation(loc))
-                if(rc.senseFlooding(loc) && !waterLocations.contains(loc)){
-                    if(rc.getTeamSoup()>3){
-                        comms.broadcastWaterLocation(loc);
-                        waterLocations.add(loc);
-                    }
-                }
-        }
-
         //Miners trying to sense water
-        for(Direction dir:Util.directions){
-            MapLocation loc = rc.getLocation().add(dir);
-            if(rc.canSenseLocation(loc))
-                if(rc.senseFlooding(loc) && !waterLocations.contains(loc)){
-                    int[] message={comms.teamId,10,loc.x,loc.y,0,0,0};
-                    if(rc.canSubmitTransaction(message,3)){
-                        rc.submitTransaction(message,3);
-                        waterLocations.add(loc);
-                    }
-                }
-        }
+       for(Direction dir:Util.directions){
+           MapLocation loc = rc.getLocation().add(dir);
+           if(rc.canSenseLocation(loc))
+               if(rc.senseFlooding(loc) && !waterLocations.contains(loc)){
+                   if(rc.getTeamSoup()>3){
+                       comms.broadcastWaterLocation(loc);
+                       waterLocations.add(loc);
+                   }
+               }
+       }
         printSoupLocations();
         printRefineries();
 
@@ -77,6 +58,7 @@ public class Miner extends Unit {
 
         MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
         System.out.println("soup nearby: "+nearbySoupLocations.length);
+
         build_first_vaporator = rc.getTeamSoup() > 550 && rc.getSoupCarrying() > 3 && fulfillmentCenterCreated == true && firstVaporatorCreated == false;
         int vape_count = 0;
         for (int i = 0; i < 3; i++){
@@ -87,7 +69,6 @@ public class Miner extends Unit {
         build_second_vaporator = rc.getTeamSoup() > 550 && rc.getSoupCarrying() > 3 && refineries.size() == 1 && vaporator_checker[0] == -1 && vaporator_checker[1] != -1;
         build_third_vaporator = rc.getTeamSoup() > 550 && rc.getSoupCarrying() > 3 && refineries.size() == maxRefineries && vaporator_checker[0] == -1 && vaporator_checker[2] != -1;
         System.out.println("build_first_vaporator is " + build_first_vaporator + "and build_second_vapes = " + build_second_vaporator + " and current soup is " + rc.getSoupCarrying() + "and team is " + rc.getTeamSoup());
-
         /*
         if the miner has reached its souplimit
         then go to deposit
@@ -96,8 +77,8 @@ public class Miner extends Unit {
            /*
             Robot is full of soup
             */
-            goToClosestDeposit();
-            diagonalMovementCount = 0;
+           goToClosestDeposit();
+           diagonalMovementCount = 0;
         }
         else if(rc.getTeamSoup()>155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3 ){
             /*
@@ -105,27 +86,32 @@ public class Miner extends Unit {
              */
             System.out.println("In Fulfillment");
             buildFulfillmentCenter();
+
             diagonalMovementCount = 0;
         }
         else if(build_first_vaporator == true){
             /// build first vaporator near HQ
             System.out.println("attempting to build vaporator");
             buildVaporator();
+
             diagonalMovementCount = 0;
         }
-
-        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>155 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size()>0  ){
+        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>155 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size()>0){
             System.out.println("In Design School");
             buildDesignSchool();
             diagonalMovementCount = 0;
 
         }
-        else if(!nav.byRobot(RobotType.REFINERY) && refineries.size()<1 && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20 && nearbySoupLocations.length>2 && firstVaporatorCreated == true){
+        else if(!nav.byRobot(RobotType.REFINERY) && refineries.size()<1 && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20 && nearbySoupLocations.length>2){
             System.out.println("In Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
         }
+
         else if(nav.distanceTo(rc.getLocation(), closestRefineLocation)> 15  && refineries.size()< maxRefineries && rc.getTeamSoup()>400 && rc.getSoupCarrying()>20 && nearbySoupLocations.length>2 && firstVaporatorCreated == true){
+
+        else if(nav.distanceTo(rc.getLocation(), closestRefineLocation)>15 && refineries.size()<maxRefineries && rc.getTeamSoup()>400 && rc.getSoupCarrying()>20 && nearbySoupLocations.length>2){
+
             System.out.println("Build secondary Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
@@ -261,6 +247,7 @@ public class Miner extends Unit {
                             waterLocations.add(newWaterLocation);
                         }
                         break;
+
                     case 12:
                         firstVaporatorCreated = true;
                         numVaporators++;
@@ -270,6 +257,8 @@ public class Miner extends Unit {
                         }
                         System.out.println("Vaporator created");
                         break;
+
+
 
                 }
             }
@@ -284,16 +273,14 @@ public class Miner extends Unit {
         for (Direction dir : Util.directions) {
             if(rc.canMineSoup(dir))
                 bySoup = true;
-            System.out.println("trying to mine in "+dir);
-            if (tryMine(dir)) {
-                MapLocation soupLoc = rc.getLocation().add(dir);
-                if (!soupLocations.contains(soupLoc)) {
-                    System.out.println("adding soup location ["+soupLoc.x+","+soupLoc.y+"]");
-                    int[] message = {comms.teamId, 2, soupLoc.x, soupLoc.y, 0,0,0};
-                    soupLocations.add(soupLoc);
-                    rc.submitTransaction(message, 1);
+                System.out.println("trying to mine in "+dir);
+                if (tryMine(dir)) {
+                    MapLocation soupLoc = rc.getLocation().add(dir);
+                    if (!soupLocations.contains(soupLoc) && rc.getTeamSoup()>4) {
+                        comms.broadcastSoupLocation(soupLoc);
+                        soupLocations.add(soupLoc);
+                    }
                 }
-            }
         }
 
         /*
@@ -322,6 +309,7 @@ public class Miner extends Unit {
     }
 
     private void buildFulfillmentCenter() throws GameActionException {
+
         Direction d = null;
         boolean within_hq = nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1) && numVaporators == 0;
         if (within_hq == true) {
@@ -330,19 +318,27 @@ public class Miner extends Unit {
                 */
             d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
             if (tryBuild(RobotType.FULFILLMENT_CENTER, d)) {
+
+        if(nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1)){
+            /*
+            Build Fulfillment
+             */
+            Direction d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
+            if(tryBuild(RobotType.FULFILLMENT_CENTER, d)){
+
                 System.out.println("built fulfillment");
                 fulfillmentCenterCreated = true;
                 RobotInfo[] robots = rc.senseNearbyRobots();
-                for (RobotInfo robot : robots) {
-                    if (robot.getType() == RobotType.FULFILLMENT_CENTER) {
-                            /*
-                            Transmit the fulfillment center x and y
-                             */
+                for(RobotInfo robot : robots){
+                    if(robot.getType()==RobotType.FULFILLMENT_CENTER){
+                        /*
+                        Transmit the fulfillment center x and y
+                         */
                         MapLocation location = robot.getLocation();
-                        int[] message = {comms.teamId, 8, location.x, location.y, 0, 0, 0};
-                        rc.submitTransaction(message, 2);
+                        comms.broadcastFulfillmentCenterLocation(location);
                     }
                 }
+
             }
         }
         else if (nav.inRadius(rc.getLocation(), HQLocation, 1)) {
@@ -435,8 +431,28 @@ public class Miner extends Unit {
                 if (nav.tryMove(d)) {
                 }
             }
-        }
 
+
+            }
+        }
+        else if(nav.inRadius(rc.getLocation(), HQLocation, 1)){
+                /*
+                Move away from HQ
+                 */
+
+        }
+        else {
+            /*
+            Move to HQ
+             */
+            Direction d = rc.getLocation().directionTo(HQLocation);
+            if(nav.tryMove(d)){
+
+
+
+            }
+        }
+    }
 
     private void goToClosestDeposit() throws GameActionException {
         Direction d = rc.getLocation().directionTo(closestRefineLocation);
@@ -520,6 +536,7 @@ public class Miner extends Unit {
             if (nav.tryMove(rd)) {
                 System.out.println("Robot moved in random direction " + rd);
             } else if (nav.tryAltMoves(rd)) {
+
             }
             else {
                 System.out.println("Robot could not move");
@@ -563,9 +580,8 @@ public class Miner extends Unit {
                 //location around robot but could not mine.
                 int soupAmount = rc.senseSoup(soupLoc);
                 if(soupAmount==0){
-                    int[] message = {comms.teamId, 3, soupLoc.x, soupLoc.y, 0,0,0};
                     if(rc.getTeamSoup()>4){
-                        rc.submitTransaction(message, 3);
+                        comms.broadcastSoupLocation(soupLoc);
                         System.out.println("Submitted transaction to remove soup");
                     }
                 }
@@ -605,8 +621,7 @@ public class Miner extends Unit {
                 for(RobotInfo robot : robots){
                     if(robot.getType()==RobotType.DESIGN_SCHOOL){
                         MapLocation location = robot.getLocation();
-                        int[] message = {comms.teamId, 4, location.x, location.y, 0,0,0};
-                        rc.submitTransaction(message, 5);
+                        comms.broadcastDesignSchoolLocation(location);
                     }
                 }
             }
@@ -617,7 +632,8 @@ public class Miner extends Unit {
         Direction dir = nav.randomDirection();
         if(nav.inRadius(rc.getLocation(), HQLocation, 3)){
             //move away from HQ
-            moveAwayFromHQ(); }
+            moveAwayFromHQ();
+        }
         else {
             if (tryBuild(RobotType.REFINERY, dir)) {
                 System.out.println("built");
@@ -627,8 +643,7 @@ public class Miner extends Unit {
                     if (robot.type == RobotType.REFINERY) {
                         System.out.println("sending refinery location");
                         MapLocation location = robot.getLocation();
-                        int[] refineryLocationTransaction = {comms.teamId, 1, location.x, location.y, 0, 0, 0};
-                        rc.submitTransaction(refineryLocationTransaction, 20);
+                        comms.broadcastRefineryLocation(location);
                     }
                 }
             } else {
