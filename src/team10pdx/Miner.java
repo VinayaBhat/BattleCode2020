@@ -71,8 +71,8 @@ public class Miner extends Unit {
                 vape_count += 1;
             }
         }
-        build_second_vaporator = rc.getTeamSoup() > 550 && rc.getSoupCarrying() > 3 && refineries.size() == 1 && vaporator_checker[0] == -1 && vaporator_checker[1] != -1;
-        build_third_vaporator = rc.getTeamSoup() > 550 && rc.getSoupCarrying() > 3 && refineries.size() == maxRefineries && vaporator_checker[0] == -1 && vaporator_checker[2] != -1;
+        build_second_vaporator = rc.getTeamSoup() > 550 && rc.getSoupCarrying() > 3 && refineries.size() == 1 && vaporator_checker[0] == -1 && vape_count == 1;
+        build_third_vaporator = rc.getTeamSoup() > 550 && rc.getSoupCarrying() > 3 && refineries.size() == maxRefineries && vaporator_checker[0] == -1 && vape_count == 2;
         System.out.println("build_first_vaporator is " + build_first_vaporator + "and build_second_vapes = " + build_second_vaporator + " and current soup is " + rc.getSoupCarrying() + "and team is " + rc.getTeamSoup());
         /*
         if the miner has reached its souplimit
@@ -103,11 +103,11 @@ public class Miner extends Unit {
             buildDesignSchool();
             diagonalMovementCount = 0;
 
-        } else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
+        } else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
             System.out.println("In Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
-        } else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 400 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
+        } else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 400 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
 
             System.out.println("Build secondary Refinery");
             diagonalMovementCount = 0;
@@ -348,31 +348,38 @@ public class Miner extends Unit {
             boolean within_second_refinery = false;
             MapLocation first_refinery = null;
             MapLocation second_refinery = null;
+            int vapecount = 0;
+            for (int i = 0; i < 3; i++){
+                if (vaporator_checker[i] == - 1){
+                    vapecount += 1;
+                }
+            }
             int checker = -1;
+
             if (refineries.size() == 1) {
                 first_refinery = refineries.get(0);
-                within_first_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(0), 2) && !nav.inRadius(rc.getLocation(), refineries.get(0), 1) && vaporator_checker[1] != -1;
+                within_first_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(0), 2) && !nav.inRadius(rc.getLocation(), refineries.get(0), 1) && vapecount == 1;
 
             } else if (refineries.size() == maxRefineries) {
                 second_refinery = refineries.get(1);
-                within_second_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(1), 2) && !nav.inRadius(rc.getLocation(), refineries.get(1), 1) && vaporator_checker[2] != -1;
+                within_second_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(1), 2) && !nav.inRadius(rc.getLocation(), refineries.get(1), 1) && vapecount == 2;
             }
-            if (within_hq == true && fulfillmentCenterCreated == true) {
+                if (within_hq == true && fulfillmentCenterCreated == true) {
                 d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
                 checker = 0;
-            } else if (refineries.size() == 1 && within_first_refinery == true && vaporator_checker[1] != -1 && firstVaporatorCreated == true) {
+            } else if (refineries.size() == 1 && within_first_refinery == true  && firstVaporatorCreated == true) {
                 d = nav.oppositeDirection(rc.getLocation().directionTo(first_refinery));
                 checker = 1;
-            } else if (refineries.size() == maxRefineries && within_second_refinery == true && vaporator_checker[2] != -1 && firstVaporatorCreated == true) {
+            } else if (refineries.size() == maxRefineries && within_second_refinery == true  && firstVaporatorCreated == true) {
                 d = nav.oppositeDirection(rc.getLocation().directionTo(second_refinery));
                 checker = 2;
             }
 
             if (d != null && tryBuild(RobotType.VAPORATOR, d)) {
                 System.out.println("built vaporator");
-                //if (numVaporators == 0) {
-                //   firstVaporatorCreated = true;
-                //}
+                if (numVaporators == 0) {
+                   firstVaporatorCreated = true;
+                }
                 RobotInfo[] robots = rc.senseNearbyRobots();
                 for (RobotInfo robot : robots) {
                     if (robot.getType() == RobotType.VAPORATOR) {
