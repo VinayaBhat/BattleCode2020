@@ -87,6 +87,15 @@ public class Miner extends Unit {
             goToClosestDeposit();
             diagonalMovementCount = 0;
         }
+        else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && refineries.size()!=0 && rc.getTeamSoup() > 400 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
+
+            System.out.println("Build secondary Refinery");
+            diagonalMovementCount = 0;
+            buildRefinery();
+        }
+        else  if(rc.getTeamSoup()>250 && netgun<2 && rc.getLocation().x >10 && rc.getLocation().x<mapheight-10 && rc.getLocation().y>10 && rc.getLocation().y<mapwidth-10 ) {
+            buildNetGun();
+        }
         else if (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3) {
             /*
             Build a Fulfillment Center
@@ -96,35 +105,28 @@ public class Miner extends Unit {
 
             diagonalMovementCount = 0;
         }
-        else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
-            System.out.println("In Refinery");
-            diagonalMovementCount = 0;
-            buildRefinery();
-        }else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
-            System.out.println("In Design School");
-            buildDesignSchool();
-            diagonalMovementCount = 0;
-
-        }else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 400 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
-
-            System.out.println("Build secondary Refinery");
-            diagonalMovementCount = 0;
-            buildRefinery();
-        }else  if(rc.getTeamSoup()>250 && netgun<2 && rc.getLocation().x >10 && rc.getLocation().x<mapheight-10 && rc.getLocation().y>10 && rc.getLocation().y<mapwidth-10 ) {
-            buildNetGun();
-        }
         else if (build_first_vaporator == true) {
             /// build first vaporator near HQ
             System.out.println("attempting to build vaporator");
             buildVaporator();
 
             diagonalMovementCount = 0;
-        }  else if (build_second_vaporator == true || build_third_vaporator == true) {
-            /// build first vaporator near HQ
-            System.out.println("attempting to build vaporator");
-            buildVaporator();
+        } else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
+            System.out.println("In Design School");
+            buildDesignSchool();
             diagonalMovementCount = 0;
-       }
+
+        } else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
+            System.out.println("In Refinery");
+            diagonalMovementCount = 0;
+            buildRefinery();
+        }
+//        else if (build_second_vaporator == true || build_third_vaporator == true) {
+//            /// build first vaporator near HQ
+//            System.out.println("attempting to build vaporator");
+//            buildVaporator();
+//            diagonalMovementCount = 0;
+//       }
         //there is soup nearby
         else if (nearbySoupLocations.length > 0) {
             /*
@@ -388,6 +390,7 @@ public class Miner extends Unit {
                 System.out.println("built vaporator");
                 if (numVaporators == 0) {
                    firstVaporatorCreated = true;
+                   build_first_vaporator=false;
                 }
                 RobotInfo[] robots = rc.senseNearbyRobots();
                 for (RobotInfo robot : robots) {
@@ -468,7 +471,7 @@ public class Miner extends Unit {
 
     private MapLocation[] getPossibleRefineLocations() {
         MapLocation[] locations;
-        if(numLandscapers<1 || refineries.size()==0){
+        if(numLandscapers<1 && refineries.size()==0){
                 /*
                 Before landscapers
                  */
