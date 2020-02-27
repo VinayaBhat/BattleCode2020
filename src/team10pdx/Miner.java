@@ -22,31 +22,36 @@ public class Miner extends Unit {
     int diagonalMovementCount = 0;
     MapLocation closestRefineLocation;
     Direction diagonalDirection;
+    int numVaporators = 0;
+
+
 
     public Miner(RobotController r){
         super(r);
     }
 
     public void takeTurn() throws GameActionException {
-        System.out.println("ID: "+rc.getID()+" soup: "+rc.getSoupCarrying());
-        System.out.println("Diag: "+diagonalMovementCount);
+        System.out.println("ID: " + rc.getID() + " soup: " + rc.getSoupCarrying());
+        System.out.println("Diag: " + diagonalMovementCount);
 
         //get HQ Location when first made.
-        if(HQLocation==null){
+        if (HQLocation == null) {
             getHQLocation();
         }
 
         //Miners trying to sense water
-       for(Direction dir:Util.directions){
-           MapLocation loc = rc.getLocation().add(dir);
-           if(rc.canSenseLocation(loc))
-               if(rc.senseFlooding(loc) && !waterLocations.contains(loc)){
-                   if(rc.getTeamSoup()>3){
-                       comms.broadcastWaterLocation(loc);
-                       waterLocations.add(loc);
-                   }
-               }
-       }
+        for (Direction dir : Util.directions) {
+            MapLocation loc = rc.getLocation().add(dir);
+            if (rc.canSenseLocation(loc))
+                if (rc.senseFlooding(loc) && !waterLocations.contains(loc)) {
+                    if (rc.getTeamSoup() > 3) {
+                        comms.broadcastWaterLocation(loc);
+                        waterLocations.add(loc);
+                    }
+                }
+        }
+
+
         printSoupLocations();
         printRefineries();
 
@@ -57,12 +62,12 @@ public class Miner extends Unit {
         checkSurroundingsForKnownSoup();
 
         MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
-        System.out.println("soup nearby: "+nearbySoupLocations.length);
+        System.out.println("soup nearby: " + nearbySoupLocations.length);
 
         build_first_vaporator = rc.getTeamSoup() > 550 && rc.getSoupCarrying() > 3 && fulfillmentCenterCreated == true && firstVaporatorCreated == false;
         int vape_count = 0;
-        for (int i = 0; i < 3; i++){
-            if (vaporator_checker[i] == -1){
+        for (int i = 0; i < 3; i++) {
+            if (vaporator_checker[i] == -1) {
                 vape_count += 1;
             }
         }
@@ -73,14 +78,13 @@ public class Miner extends Unit {
         if the miner has reached its souplimit
         then go to deposit
         */
-        if(rc.getSoupCarrying()==RobotType.MINER.soupLimit) {
+        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
            /*
             Robot is full of soup
             */
-           goToClosestDeposit();
-           diagonalMovementCount = 0;
-        }
-        else if(rc.getTeamSoup()>155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3 ){
+            goToClosestDeposit();
+            diagonalMovementCount = 0;
+        } else if (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3) {
             /*
             Build a Fulfillment Center
              */
@@ -88,36 +92,27 @@ public class Miner extends Unit {
             buildFulfillmentCenter();
 
             diagonalMovementCount = 0;
-        }
-        else if(build_first_vaporator == true){
+        } else if (build_first_vaporator == true) {
             /// build first vaporator near HQ
             System.out.println("attempting to build vaporator");
             buildVaporator();
 
             diagonalMovementCount = 0;
-        }
-        else if(numDesignSchools < maxDesignSchools && rc.getTeamSoup()>155 && rc.getSoupCarrying()>5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size()>0){
+        } else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
             System.out.println("In Design School");
             buildDesignSchool();
             diagonalMovementCount = 0;
 
-        }
-        else if(!nav.byRobot(RobotType.REFINERY) && refineries.size()<1 && rc.getTeamSoup()>220 && rc.getSoupCarrying()>20 && nearbySoupLocations.length>2){
+        } else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
             System.out.println("In Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
-        }
-
-        else if(nav.distanceTo(rc.getLocation(), closestRefineLocation)> 15  && refineries.size()< maxRefineries && rc.getTeamSoup()>400 && rc.getSoupCarrying()>20 && nearbySoupLocations.length>2 && firstVaporatorCreated == true){
-
-        else if(nav.distanceTo(rc.getLocation(), closestRefineLocation)>15 && refineries.size()<maxRefineries && rc.getTeamSoup()>400 && rc.getSoupCarrying()>20 && nearbySoupLocations.length>2){
+        } else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 400 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
 
             System.out.println("Build secondary Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
-        }
-
-        else if(build_second_vaporator == true || build_third_vaporator == true){
+        } else if (build_second_vaporator == true || build_third_vaporator == true) {
             /// build first vaporator near HQ
             System.out.println("attempting to build vaporator");
             buildVaporator();
@@ -126,13 +121,13 @@ public class Miner extends Unit {
 
 
         //there is soup nearby
-        else if(nearbySoupLocations.length>0) {
+        else if (nearbySoupLocations.length > 0) {
             /*
             Soup Nearby!
              */
             System.out.println("Soup I can sense: ");
-            for(MapLocation loc : nearbySoupLocations){
-                System.out.println(" ["+loc.x+","+loc.y+"]");
+            for (MapLocation loc : nearbySoupLocations) {
+                System.out.println(" [" + loc.x + "," + loc.y + "]");
             }
             goToNearbySoup(nearbySoupLocations);
             diagonalMovementCount = 0;
@@ -143,237 +138,224 @@ public class Miner extends Unit {
         }
     }
 
-    private void printSoupLocations() {
-        System.out.println("Global Soup Locations: ");
-        for(MapLocation loc : soupLocations){
-            System.out.println(" ["+loc.x+","+loc.y+"]");
+        private void printSoupLocations () {
+            System.out.println("Global Soup Locations: ");
+            for (MapLocation loc : soupLocations) {
+                System.out.println(" [" + loc.x + "," + loc.y + "]");
+            }
         }
-    }
 
-    private void checkSurroundingsForKnownSoup() throws GameActionException {
-        for(Direction dir : Util.directions){
-            MapLocation loc = rc.getLocation().add(dir);
-            if(soupLocations.contains(loc)){
-                int soupAmount = rc.senseSoup(loc);
-                if(soupAmount==0 && rc.getTeamSoup() > 2){
-                    System.out.println("broadcasting remove soup");
-                    comms.broadcastRemoveSoup(loc, 2);
+        private void checkSurroundingsForKnownSoup () throws GameActionException {
+            for (Direction dir : Util.directions) {
+                MapLocation loc = rc.getLocation().add(dir);
+                if (soupLocations.contains(loc)) {
+                    int soupAmount = rc.senseSoup(loc);
+                    if (soupAmount == 0 && rc.getTeamSoup() > 2) {
+                        System.out.println("broadcasting remove soup");
+                        comms.broadcastRemoveSoup(loc, 2);
+                    }
                 }
             }
         }
-    }
 
-    private void getHQLocation() {
+        private void getHQLocation () {
         /*
         Get the HQ location when first created
          */
-        if (HQLocation == null) {
-            RobotInfo[] searchRobot = rc.senseNearbyRobots();
-            for (RobotInfo robot : searchRobot) {
-                if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
-                    HQLocation = robot.location;
-                    System.out.println("HQ location " + HQLocation);
+            if (HQLocation == null) {
+                RobotInfo[] searchRobot = rc.senseNearbyRobots();
+                for (RobotInfo robot : searchRobot) {
+                    if (robot.type == RobotType.HQ && robot.team == rc.getTeam()) {
+                        HQLocation = robot.location;
+                        System.out.println("HQ location " + HQLocation);
+                    }
                 }
             }
         }
-    }
 
-    private void printRefineries() {
-        System.out.println("Refineries: ");
-        for(MapLocation location : refineries ){
-            System.out.println("  x: " + location.x + " y: " + location.y );
+        private void printRefineries () {
+            System.out.println("Refineries: ");
+            for (MapLocation location : refineries) {
+                System.out.println("  x: " + location.x + " y: " + location.y);
+            }
         }
-    }
 
-    private void dealWithBlockchainMessages() throws GameActionException {
-        int[][] messages = comms.findTeamMessagesInBlockChain();
+        private void dealWithBlockchainMessages () throws GameActionException {
+            int[][] messages = comms.findTeamMessagesInBlockChain();
 
-        //loop through messages from our team
-        for(int[] mes : messages){
-            //messages is initialized with all -1
-            //so if there is a -1 it is the end
-            if(mes[0]==-1){
-                //end of messages
-                break;
-            }else{
-                switch(mes[1]){
-                    case 0:
-                        //message about the HQ location
-                        if(HQLocation==null){
-                            HQLocation = new MapLocation(mes[2],mes[3]);
-                            System.out.println("HQ Location: x:"+ mes[2]+" y:"+mes[3]);
-                        }
-                        break;
-                    case 1:
-                        //message about the refinery location
-                        MapLocation newLocation = new MapLocation(mes[2], mes[3]);
-                        if(!refineries.contains(newLocation)){
-                            System.out.println("New Refinery");
-                            refineries.add(newLocation);
-                        }
-                        break;
-                    case 2:
-                        //message about soup location
-                        MapLocation loc = new MapLocation(mes[2], mes[3]);
-                        if(!soupLocations.contains(loc)){
-                            System.out.println("New Soup Location");
-                            soupLocations.add(loc);
-                        }
-                        //System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
-                        break;
-                    case 3:
-                        MapLocation loc1 = new MapLocation(mes[2], mes[3]);
-                        soupLocations.remove(loc1);
-                        System.out.println("Removed soup location");
-                        break;
-                    case 4:
-                        numDesignSchools++;
-                        System.out.println("New Design School num: "+numDesignSchools);
-                        break;
-                    case 5:
-                        numLandscapers++;
-                        System.out.println("New Landscaper");
-                        break;
-                    case 8:
-                        fulfillmentCenterCreated = true;
-                        System.out.println("Fulfillment Created");
-                        break;
-                    case 9:
-                        break;
-                    case 10:
-                        System.out.println("New Water Location");
-                        MapLocation newWaterLocation = new MapLocation(mes[2],mes[3]);
-                        if(!waterLocations.contains(newWaterLocation)){
-                            waterLocations.add(newWaterLocation);
-                        }
-                        break;
+            //loop through messages from our team
+            for (int[] mes : messages) {
+                //messages is initialized with all -1
+                //so if there is a -1 it is the end
+                if (mes[0] == -1) {
+                    //end of messages
+                    break;
+                } else {
+                    switch (mes[1]) {
+                        case 0:
+                            //message about the HQ location
+                            if (HQLocation == null) {
+                                HQLocation = new MapLocation(mes[2], mes[3]);
+                                System.out.println("HQ Location: x:" + mes[2] + " y:" + mes[3]);
+                            }
+                            break;
+                        case 1:
+                            //message about the refinery location
+                            MapLocation newLocation = new MapLocation(mes[2], mes[3]);
+                            if (!refineries.contains(newLocation)) {
+                                System.out.println("New Refinery");
+                                refineries.add(newLocation);
+                            }
+                            break;
+                        case 2:
+                            //message about soup location
+                            MapLocation loc = new MapLocation(mes[2], mes[3]);
+                            if (!soupLocations.contains(loc)) {
+                                System.out.println("New Soup Location");
+                                soupLocations.add(loc);
+                            }
+                            //System.out.println("Soup Location: x:"+ mes[2]+" y:"+mes[3]);
+                            break;
+                        case 3:
+                            MapLocation loc1 = new MapLocation(mes[2], mes[3]);
+                            soupLocations.remove(loc1);
+                            System.out.println("Removed soup location");
+                            break;
+                        case 4:
+                            numDesignSchools++;
+                            System.out.println("New Design School num: " + numDesignSchools);
+                            break;
+                        case 5:
+                            numLandscapers++;
+                            System.out.println("New Landscaper");
+                            break;
+                        case 8:
+                            fulfillmentCenterCreated = true;
+                            System.out.println("Fulfillment Created");
+                            break;
+                        case 9:
+                            break;
+                        case 10:
+                            System.out.println("New Water Location");
+                            MapLocation newWaterLocation = new MapLocation(mes[2], mes[3]);
+                            if (!waterLocations.contains(newWaterLocation)) {
+                                waterLocations.add(newWaterLocation);
+                            }
+                            break;
 
-                    case 12:
-                        firstVaporatorCreated = true;
-                        numVaporators++;
-                        if (mes[4] >= 0) {
-                            int cross_off = mes[4];
-                            vaporator_checker[cross_off] = -1;
-                        }
-                        System.out.println("Vaporator created");
-                        break;
-
+                        case 12:
+                            firstVaporatorCreated = true;
+                            numVaporators++;
+                            if (mes[4] >= 0) {
+                                int cross_off = mes[4];
+                                vaporator_checker[cross_off] = -1;
+                            }
+                            System.out.println("Vaporator created");
+                            break;
 
 
+                    }
                 }
             }
         }
-    }
 
-    private void goToNearbySoup(MapLocation[] nearbySoupLocations) throws GameActionException {
-        diagonalMovementCount = 0;
+        private void goToNearbySoup (MapLocation[]nearbySoupLocations) throws GameActionException {
+            diagonalMovementCount = 0;
 
-        System.out.println("going to nearby soup");
-        boolean bySoup = false;
-        for (Direction dir : Util.directions) {
-            if(rc.canMineSoup(dir))
-                bySoup = true;
-                System.out.println("trying to mine in "+dir);
+            System.out.println("going to nearby soup");
+            boolean bySoup = false;
+            for (Direction dir : Util.directions) {
+                if (rc.canMineSoup(dir))
+                    bySoup = true;
+                System.out.println("trying to mine in " + dir);
                 if (tryMine(dir)) {
                     MapLocation soupLoc = rc.getLocation().add(dir);
-                    if (!soupLocations.contains(soupLoc) && rc.getTeamSoup()>4) {
+                    if (!soupLocations.contains(soupLoc) && rc.getTeamSoup() > 4) {
                         comms.broadcastSoupLocation(soupLoc);
                         soupLocations.add(soupLoc);
                     }
                 }
-        }
+            }
 
         /*
         Finally, if not by any soup then try and move towards
         the soup that is within the robots radius
          */
-        System.out.println("by soup: "+bySoup);
-        if(!bySoup){
-            //not by soup so move
-            //System.out.println("i should move");
-            for(MapLocation loc: nearbySoupLocations){
-                Direction d = rc.getLocation().directionTo(loc);
-                if(nav.tryMove(d)){
-                    System.out.println("moved "+d);
-                    break;
-                }
-                else if(nav.tryAltMoves(d)){
-                    System.out.println("moved "+d);
-                }
-                else{
-                    if(nav.tryMove(nav.randomDirection()))
-                        System.out.println("move randomly");
+            System.out.println("by soup: " + bySoup);
+            if (!bySoup) {
+                //not by soup so move
+                //System.out.println("i should move");
+                for (MapLocation loc : nearbySoupLocations) {
+                    Direction d = rc.getLocation().directionTo(loc);
+                    if (nav.tryMove(d)) {
+                        System.out.println("moved " + d);
+                        break;
+                    } else if (nav.tryAltMoves(d)) {
+                        System.out.println("moved " + d);
+                    } else {
+                        if (nav.tryMove(nav.randomDirection()))
+                            System.out.println("move randomly");
+                    }
                 }
             }
         }
-    }
 
-    private void buildFulfillmentCenter() throws GameActionException {
+        private void buildFulfillmentCenter () throws GameActionException {
 
-        Direction d = null;
-        boolean within_hq = nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1) && numVaporators == 0;
-        if (within_hq == true) {
+            Direction d = null;
+            boolean within_hq = nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1) && numVaporators == 0;
+            if (within_hq == true) {
                 /*
                 Build Fulfillment
                 */
-            d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
-            if (tryBuild(RobotType.FULFILLMENT_CENTER, d)) {
 
-        if(nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1)){
-            /*
-            Build Fulfillment
-             */
-            Direction d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
-            if(tryBuild(RobotType.FULFILLMENT_CENTER, d)){
+                d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
+                if (tryBuild(RobotType.FULFILLMENT_CENTER, d)) {
 
-                System.out.println("built fulfillment");
-                fulfillmentCenterCreated = true;
-                RobotInfo[] robots = rc.senseNearbyRobots();
-                for(RobotInfo robot : robots){
-                    if(robot.getType()==RobotType.FULFILLMENT_CENTER){
+                    System.out.println("built fulfillment");
+                    fulfillmentCenterCreated = true;
+                    RobotInfo[] robots = rc.senseNearbyRobots();
+                    for (RobotInfo robot : robots) {
+                        if (robot.getType() == RobotType.FULFILLMENT_CENTER) {
                         /*
                         Transmit the fulfillment center x and y
                          */
-                        MapLocation location = robot.getLocation();
-                        comms.broadcastFulfillmentCenterLocation(location);
+                            MapLocation location = robot.getLocation();
+                            comms.broadcastFulfillmentCenterLocation(location);
+                        }
                     }
-                }
 
-            }
-        }
-        else if (nav.inRadius(rc.getLocation(), HQLocation, 1)) {
+                }
+            } else if (nav.inRadius(rc.getLocation(), HQLocation, 1)) {
                 /*
                 Move away from HQ
                  */
                 d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
-            if (nav.tryMove(d)) {
+                if (nav.tryMove(d)) {
+                }
+            } else {
+                d = nav.randomDirection();
+                if (nav.tryMove(d)) {
+                }
             }
         }
-        else {
-            d = nav.randomDirection();
-            if (nav.tryMove(d)) {
-            }
-        }
-
-            }
 
 
-    private void buildVaporator() throws GameActionException {
-        Direction d = null;
-        boolean within_hq = nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1) && firstVaporatorCreated == false;
-        boolean within_first_refinery = false;
-        boolean within_second_refinery = false;
-        MapLocation first_refinery = null;
-        MapLocation second_refinery = null;
-        int checker = -1;
-        if (refineries.size() == 1){
-            first_refinery = refineries.get(0);
-            within_first_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(0), 2) && !nav.inRadius(rc.getLocation(), refineries.get(0), 1) && vaporator_checker[1] != -1;
+        private void buildVaporator () throws GameActionException {
+            Direction d = null;
+            boolean within_hq = nav.inRadius(rc.getLocation(), HQLocation, 2) && !nav.inRadius(rc.getLocation(), HQLocation, 1) && firstVaporatorCreated == false;
+            boolean within_first_refinery = false;
+            boolean within_second_refinery = false;
+            MapLocation first_refinery = null;
+            MapLocation second_refinery = null;
+            int checker = -1;
+            if (refineries.size() == 1) {
+                first_refinery = refineries.get(0);
+                within_first_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(0), 2) && !nav.inRadius(rc.getLocation(), refineries.get(0), 1) && vaporator_checker[1] != -1;
 
-        }
-        else if (refineries.size() == maxRefineries) {
-            second_refinery = refineries.get(1);
-            within_second_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(1), 2) && !nav.inRadius(rc.getLocation(), refineries.get(1), 1) && vaporator_checker[2] != -1;
+            } else if (refineries.size() == maxRefineries) {
+                second_refinery = refineries.get(1);
+                within_second_refinery = numVaporators > 0 && nav.inRadius(rc.getLocation(), refineries.get(1), 2) && !nav.inRadius(rc.getLocation(), refineries.get(1), 1) && vaporator_checker[2] != -1;
             }
             if (within_hq == true && fulfillmentCenterCreated == true) {
                 d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
@@ -389,7 +371,7 @@ public class Miner extends Unit {
             if (d != null && tryBuild(RobotType.VAPORATOR, d)) {
                 System.out.println("built vaporator");
                 //if (numVaporators == 0) {
-                 //   firstVaporatorCreated = true;
+                //   firstVaporatorCreated = true;
                 //}
                 RobotInfo[] robots = rc.senseNearbyRobots();
                 for (RobotInfo robot : robots) {
@@ -399,20 +381,23 @@ public class Miner extends Unit {
                              */
                         MapLocation location = robot.getLocation();
                         int[] message = {comms.teamId, 12, location.x, location.y, checker, robot.getID(), 0};
-                        if (robot.getID() != 0){
+                        if (robot.getID() != 0) {
                             System.out.println("vapeys id is " + robot.getID());
 
-                            rc.submitTransaction(message, 2);}
+                            rc.submitTransaction(message, 2);
+                        }
                     }
                 }
-            } else if (nav.inRadius(rc.getLocation(), HQLocation, 1) && firstVaporatorCreated == false) {
+            }
+            else if (nav.inRadius(rc.getLocation(), HQLocation, 1) && firstVaporatorCreated == false) {
                 /*
                 Move away from HQ
                  */
                 d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
                 if (nav.tryMove(d)) {
                 }
-            } else if (first_refinery != null && nav.inRadius(rc.getLocation(), first_refinery, 1) && vaporator_checker[1] != -1) {
+            }
+            else if (first_refinery != null && nav.inRadius(rc.getLocation(), first_refinery, 1) && vaporator_checker[1] != -1) {
                 /*
                 Move away from HQ
                  */
@@ -426,33 +411,17 @@ public class Miner extends Unit {
                 d = nav.oppositeDirection(rc.getLocation().directionTo(second_refinery));
                 if (nav.tryMove(d)) {
                 }
-            } else {
+            }
+            else {
                 d = nav.randomDirection();
                 if (nav.tryMove(d)) {
                 }
             }
 
-
             }
-        }
-        else if(nav.inRadius(rc.getLocation(), HQLocation, 1)){
-                /*
-                Move away from HQ
-                 */
-
-        }
-        else {
-            /*
-            Move to HQ
-             */
-            Direction d = rc.getLocation().directionTo(HQLocation);
-            if(nav.tryMove(d)){
 
 
 
-            }
-        }
-    }
 
     private void goToClosestDeposit() throws GameActionException {
         Direction d = rc.getLocation().directionTo(closestRefineLocation);
@@ -688,3 +657,4 @@ public class Miner extends Unit {
         } else return false;
     }
 }
+
