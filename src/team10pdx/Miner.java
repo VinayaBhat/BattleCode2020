@@ -2,11 +2,12 @@ package team10pdx;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class Miner extends Unit {
 
     MapLocation HQLocation;
-    int maxRefineries = 2;
+    int maxRefineries = 3;
     ArrayList<MapLocation> refineries = new ArrayList<>();
     ArrayList<MapLocation> soupLocations = new ArrayList<>();
     ArrayList<MapLocation> waterLocations = new ArrayList<>();
@@ -23,6 +24,7 @@ public class Miner extends Unit {
     MapLocation closestRefineLocation;
     Direction diagonalDirection;
     int numVaporators = 0;
+    int netgun=0;
 
 
 
@@ -84,7 +86,8 @@ public class Miner extends Unit {
             */
             goToClosestDeposit();
             diagonalMovementCount = 0;
-        } else if (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3) {
+        }
+        else if (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3) {
             /*
             Build a Fulfillment Center
              */
@@ -92,34 +95,36 @@ public class Miner extends Unit {
             buildFulfillmentCenter();
 
             diagonalMovementCount = 0;
-        } else if (build_first_vaporator == true) {
-            /// build first vaporator near HQ
-            System.out.println("attempting to build vaporator");
-            buildVaporator();
-
+        }
+        else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
+            System.out.println("In Refinery");
             diagonalMovementCount = 0;
-        } else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
+            buildRefinery();
+        }else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
             System.out.println("In Design School");
             buildDesignSchool();
             diagonalMovementCount = 0;
 
-        } else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
-            System.out.println("In Refinery");
-            diagonalMovementCount = 0;
-            buildRefinery();
-        } else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 400 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
+        }else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 400 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 && firstVaporatorCreated == true) {
 
             System.out.println("Build secondary Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
-        } else if (build_second_vaporator == true || build_third_vaporator == true) {
+        }else  if(rc.getTeamSoup()>250 && netgun<2 && rc.getLocation().x >10 && rc.getLocation().x<mapheight-10 && rc.getLocation().y>10 && rc.getLocation().y<mapwidth-10 ) {
+            buildNetGun();
+        }
+        else if (build_first_vaporator == true) {
+            /// build first vaporator near HQ
+            System.out.println("attempting to build vaporator");
+            buildVaporator();
+
+            diagonalMovementCount = 0;
+        }  else if (build_second_vaporator == true || build_third_vaporator == true) {
             /// build first vaporator near HQ
             System.out.println("attempting to build vaporator");
             buildVaporator();
             diagonalMovementCount = 0;
-        }
-
-
+       }
         //there is soup nearby
         else if (nearbySoupLocations.length > 0) {
             /*
@@ -199,6 +204,9 @@ public class Miner extends Unit {
                                 System.out.println("HQ Location: x:" + mes[2] + " y:" + mes[3]);
                             }
                             break;
+                        case 13:
+                            netgun++;
+                            break;
                         case 1:
                             //message about the refinery location
                             MapLocation newLocation = new MapLocation(mes[2], mes[3]);
@@ -252,6 +260,7 @@ public class Miner extends Unit {
                             }
                             System.out.println("Vaporator created");
                             break;
+
 
 
                     }
@@ -459,7 +468,7 @@ public class Miner extends Unit {
 
     private MapLocation[] getPossibleRefineLocations() {
         MapLocation[] locations;
-        if(numLandscapers<1){
+        if(numLandscapers<1 || refineries.size()==0){
                 /*
                 Before landscapers
                  */
@@ -631,15 +640,15 @@ public class Miner extends Unit {
     private void moveAwayFromHQ() throws GameActionException {
         Direction d = rc.getLocation().directionTo(HQLocation);
         Direction opposite = nav.oppositeDirection(d);
-        if(nav.tryMove(opposite)){
-            System.out.println("Moved away from HQ");
-        }
-        else if (nav.tryAltMoves(opposite)){
-            System.out.println("Moved away from HQ alt");
-        }
-        else{
-            nav.tryMove(nav.randomDirection());
-            System.out.println("can't move at all");
+        for(int i=0;i<5;i++) {
+            if (nav.tryMove(opposite)) {
+                System.out.println("Moved away from HQ");
+            } else if (nav.tryAltMoves(opposite)) {
+                System.out.println("Moved away from HQ alt");
+            } else {
+                nav.tryMove(nav.randomDirection());
+                System.out.println("can't move at all");
+            }
         }
     }
 
@@ -662,6 +671,28 @@ public class Miner extends Unit {
             rc.depositSoup(dir, rc.getSoupCarrying());
             return true;
         } else return false;
+    }
+
+    void buildNetGun() throws GameActionException {
+        boolean canbuild=true;
+        RobotInfo[] ri=rc.senseNearbyRobots();
+        for(RobotInfo r:ri){
+            if(rc.getType()==RobotType.HQ || rc.getType()==RobotType.NET_GUN){
+                canbuild=false;
+                break;
+            }
+        }
+
+        if(canbuild) {
+            for(Direction dir:Util.directions){
+            if (tryBuild(RobotType.NET_GUN, dir)) {
+                System.out.println("Netgun built");
+                comms.broadcastnetgun();
+                netgun ++;
+                break;
+            }
+        }
+        }
     }
 }
 
