@@ -23,7 +23,9 @@ public class Communications {
             "Fulfllment Center",
             "Drones",
             "Water",
-            "Enemy HQ"
+            "Enemy HQ",
+            "Vaporator",
+            "Net Gun"
     };
 
     public Communications(RobotController r) {
@@ -101,7 +103,7 @@ public class Communications {
         return null;
     }
 
-    public boolean[] broadcastedCreation = new boolean[15];
+    public boolean[] broadcastedCreation = new boolean[4];
 
     public boolean broadcastCreation(MapLocation loc, int cue) throws GameActionException {
         if (broadcastedCreation[cue]) return false; // don't re-broadcast
@@ -201,6 +203,11 @@ public class Communications {
     public void broadcastRemoveSoup(MapLocation location, int price) throws GameActionException {
         int[] message = {teamId, 3, location.x, location.y, 0, 0, 0};
         rc.submitTransaction(message, price);
+    }
+
+    public void broadcastnetgun() throws GameActionException {
+        int[] message = {teamId, 13, 0,0, 0, 0, 0};
+        rc.submitTransaction(message, 4);
     }
 
 
