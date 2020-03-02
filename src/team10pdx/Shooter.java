@@ -20,13 +20,12 @@ public class Shooter extends Building {
 
 
         for (RobotInfo e : enemiesInRange) {
-            if (e.type == RobotType.DELIVERY_DRONE) {
+           // if (e.type == RobotType.DELIVERY_DRONE) {
                 if (rc.canShootUnit(e.ID)){
                     rc.shootUnit(e.ID);
                     shot=true;
-                    break;
                 }
-            }
+           // }
         }
         return shot;
     }
