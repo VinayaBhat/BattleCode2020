@@ -21,9 +21,11 @@ public class Miner extends Unit {
     int numVaporators = 0;
     int netgun=0;
     int[] buildnetgun={0,0};
+    boolean builder;
 
     public Miner(RobotController r){
         super(r);
+        builder = rc.getID()%2 == 0;
     }
 
     public void takeTurn() throws GameActionException {
@@ -48,38 +50,48 @@ public class Miner extends Unit {
             goToClosestDeposit();
             diagonalMovementCount = 0;
         }else if(rc.senseNearbySoup().length>0 && rc.getTeamSoup()>500 && rc.getSoupCarrying()>4 && nearbySoupLocations.length>0){
-            diagonalMovementCount=0;
-            buildVaporator();
+            if(builder){
+                diagonalMovementCount=0;
+                buildVaporator();
+            }
         }
         else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
             System.out.println("In Refinery");
-            diagonalMovementCount = 0;
-            buildRefinery();
+            if(builder){
+                diagonalMovementCount = 0;
+                buildRefinery();
+            }
         }
         else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 200 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 ) {
 
             System.out.println("Build secondary Refinery");
-            diagonalMovementCount = 0;
-            buildRefinery();
+            if(builder){
+                diagonalMovementCount = 0;
+                buildRefinery();
+            }
         }
         else if (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3) {
             /*
             Build a Fulfillment Center
              */
             System.out.println("In Fulfillment");
-            buildFulfillmentCenter();
-
-            diagonalMovementCount = 0;
+            if(builder) {
+                buildFulfillmentCenter();
+                diagonalMovementCount = 0;
+            }
         }
         else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
             System.out.println("In Design School");
-            buildDesignSchool();
-            diagonalMovementCount = 0;
-
+            if(builder){
+                buildDesignSchool();
+                diagonalMovementCount = 0;
+            }
         }
         else  if(rc.getTeamSoup()>250 && netgun<2 && rc.getLocation().x >10 && rc.getLocation().x<mapheight-10 && rc.getLocation().y>10 && rc.getLocation().y<mapwidth-10 && (buildnetgun[0]==0|| buildnetgun[1]==0) ) {
-            buildNetGun();
-            diagonalMovementCount=0;
+            if(builder){
+                buildNetGun();
+                diagonalMovementCount=0;
+            }
         }
         else if (nearbySoupLocations.length > 0) {
             /*
@@ -261,7 +273,6 @@ public class Miner extends Unit {
                 /*
                 Build Fulfillment
                 */
-
             d = nav.oppositeDirection(rc.getLocation().directionTo(HQLocation));
             if (tryBuild(RobotType.FULFILLMENT_CENTER, d)) {
 
@@ -287,8 +298,15 @@ public class Miner extends Unit {
             if (nav.tryMove(d)) {
             }
         } else {
-            d = nav.randomDirection();
-            if (nav.tryMove(d)) {
+            d = rc.getLocation().directionTo(HQLocation);
+            if (nav.tryMove(d)){
+
+            }
+            else if(nav.tryAltMoves(d)){
+
+            }
+            else{
+                nav.tryMove(nav.randomDirection());
             }
         }
     }
