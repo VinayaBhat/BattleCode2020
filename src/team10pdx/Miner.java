@@ -49,7 +49,7 @@ public class Miner extends Unit {
     }
 
     private void runBuilder() throws GameActionException{
-        System.out.println("BUILDDDDER");
+        System.out.println("I'm a Builder!");
         MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
         System.out.println("soup nearby: " + nearbySoupLocations.length);
 
@@ -106,7 +106,7 @@ public class Miner extends Unit {
     }
 
     private void runMiner() throws GameActionException {
-        System.out.println("MINNNNNNNNER");
+        System.out.println("I'm a miner!");
         MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
         System.out.println("soup nearby: " + nearbySoupLocations.length);
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
