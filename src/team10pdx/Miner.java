@@ -40,6 +40,16 @@ public class Miner extends Unit {
         closestRefineLocation = nav.findNearestLocation(rc.getLocation(), getPossibleRefineLocations());
         checkSurroundingsForKnownSoup();
 
+        if(builder){
+            runBuilder();
+        }
+        else {
+            runMiner();
+        }
+    }
+
+    private void runBuilder() throws GameActionException{
+        System.out.println("BUILDDDDER");
         MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
         System.out.println("soup nearby: " + nearbySoupLocations.length);
 
@@ -47,51 +57,64 @@ public class Miner extends Unit {
            /*
             Robot is full of soup
             */
+            System.out.println("Go to closest soup");
             goToClosestDeposit();
             diagonalMovementCount = 0;
-        }else if(rc.senseNearbySoup().length>0 && rc.getTeamSoup()>500 && rc.getSoupCarrying()>4 && nearbySoupLocations.length>0){
-            if(builder){
-                diagonalMovementCount=0;
+        } else if (rc.senseNearbySoup().length > 0 && rc.getTeamSoup() > 500 && rc.getSoupCarrying() > 4 && nearbySoupLocations.length > 0) {
+                System.out.println("build vap");
+                diagonalMovementCount = 0;
                 buildVaporator();
-            }
-        }
-        else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
+        } else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
             System.out.println("In Refinery");
-            if(builder){
-                diagonalMovementCount = 0;
-                buildRefinery();
-            }
-        }
-        else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 200 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2 ) {
-
+            diagonalMovementCount = 0;
+            buildRefinery();
+        } else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 200 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
             System.out.println("Build secondary Refinery");
-            if(builder){
-                diagonalMovementCount = 0;
-                buildRefinery();
-            }
-        }
-        else if (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3) {
+            diagonalMovementCount = 0;
+            buildRefinery();
+
+        } else if (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3) {
             /*
             Build a Fulfillment Center
              */
             System.out.println("In Fulfillment");
-            if(builder) {
-                buildFulfillmentCenter();
-                diagonalMovementCount = 0;
-            }
-        }
-        else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
+            buildFulfillmentCenter();
+            diagonalMovementCount = 0;
+        } else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
             System.out.println("In Design School");
-            if(builder){
-                buildDesignSchool();
-                diagonalMovementCount = 0;
+            buildDesignSchool();
+            diagonalMovementCount = 0;
+        } else if (rc.getTeamSoup() > 250 && netgun < 2 && rc.getLocation().x > 10 && rc.getLocation().x < mapheight - 10 && rc.getLocation().y > 10 && rc.getLocation().y < mapwidth - 10 && (buildnetgun[0] == 0 || buildnetgun[1] == 0)) {
+            System.out.println("Build net gun");
+            buildNetGun();
+            diagonalMovementCount = 0;
+        } else if (nearbySoupLocations.length > 0) {
+            /*
+            Soup Nearby!
+             */
+            System.out.println("Soup I can sense: ");
+            for (MapLocation loc : nearbySoupLocations) {
+                System.out.println(" [" + loc.x + "," + loc.y + "]");
             }
+            goToNearbySoup(nearbySoupLocations);
+            diagonalMovementCount = 0;
         }
-        else  if(rc.getTeamSoup()>250 && netgun<2 && rc.getLocation().x >10 && rc.getLocation().x<mapheight-10 && rc.getLocation().y>10 && rc.getLocation().y<mapwidth-10 && (buildnetgun[0]==0|| buildnetgun[1]==0) ) {
-            if(builder){
-                buildNetGun();
-                diagonalMovementCount=0;
-            }
+        if (nearbySoupLocations.length == 0) {
+            System.out.println("no nearby soup");
+            noNearbySoup();
+        }
+    }
+
+    private void runMiner() throws GameActionException {
+        System.out.println("MINNNNNNNNER");
+        MapLocation[] nearbySoupLocations = rc.senseNearbySoup();
+        System.out.println("soup nearby: " + nearbySoupLocations.length);
+        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
+           /*
+            Robot is full of soup
+            */
+            goToClosestDeposit();
+            diagonalMovementCount = 0;
         }
         else if (nearbySoupLocations.length > 0) {
             /*
