@@ -2,6 +2,7 @@ package team10pdx;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.Map;
 
 public class Miner extends Unit {
@@ -22,6 +23,7 @@ public class Miner extends Unit {
     int netgun=0;
     int[] buildnetgun={0,0};
     boolean builder;
+    Dictionary<String, Boolean> builderTriggers;
 
     public Miner(RobotController r){
         super(r);
@@ -39,6 +41,13 @@ public class Miner extends Unit {
 
         closestRefineLocation = nav.findNearestLocation(rc.getLocation(), getPossibleRefineLocations());
         checkSurroundingsForKnownSoup();
+
+        builderTriggers.put(    "BuildVaporator",       (rc.senseNearbySoup().length > 0 && rc.getTeamSoup() > 500 && rc.getSoupCarrying() > 4 && nearbySoupLocations.length > 0));
+        builderTriggers.put(    "BuildRefinery" ,       (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2));
+        builderTriggers.put(    "BuildSecondRefinery",  (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 200 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2));
+        builderTriggers.put(    "BuildFulfillment",     (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3));
+        builderTriggers.put(    "BuildDesignSchool",   (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0));
+        builderTriggers.put(    "BuildNetGun",          (rc.getTeamSoup() > 250 && netgun < 2 && rc.getLocation().x > 10 && rc.getLocation().x < mapheight - 10 && rc.getLocation().y > 10 && rc.getLocation().y < mapwidth - 10 && (buildnetgun[0] == 0 || buildnetgun[1] == 0)));
 
         if(builder){
             runBuilder();
@@ -60,32 +69,32 @@ public class Miner extends Unit {
             System.out.println("Go to closest soup");
             goToClosestDeposit();
             diagonalMovementCount = 0;
-        } else if (rc.senseNearbySoup().length > 0 && rc.getTeamSoup() > 500 && rc.getSoupCarrying() > 4 && nearbySoupLocations.length > 0) {
+        } else if (builderTriggers.get("BuildVaporator")) {
                 System.out.println("build vap");
                 diagonalMovementCount = 0;
                 buildVaporator();
         }
-        else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
+        else if (builderTriggers.get("BuildRefinery")) {
             System.out.println("In Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
-        } else if (nav.distanceTo(rc.getLocation(), closestRefineLocation) > 15 && refineries.size() < maxRefineries && rc.getTeamSoup() > 200 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
+        } else if (builderTriggers.get("BuildSecondRefinery")) {
             System.out.println("Build secondary Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
 
-        } else if (rc.getTeamSoup() > 155 && !fulfillmentCenterCreated && rc.getSoupCarrying() > 3) {
+        } else if (builderTriggers.get("BuildFulfillmentCenter")) {
             /*
             Build a Fulfillment Center
              */
             System.out.println("In Fulfillment");
             buildFulfillmentCenter();
             diagonalMovementCount = 0;
-        } else if (numDesignSchools < maxDesignSchools && rc.getTeamSoup() > 155 && rc.getSoupCarrying() > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
+        } else if (builderTriggers.get("BuildDesignSchool")) {
             System.out.println("In Design School");
             buildDesignSchool();
             diagonalMovementCount = 0;
-        } else if (rc.getTeamSoup() > 250 && netgun < 2 && rc.getLocation().x > 10 && rc.getLocation().x < mapheight - 10 && rc.getLocation().y > 10 && rc.getLocation().y < mapwidth - 10 && (buildnetgun[0] == 0 || buildnetgun[1] == 0)) {
+        } else if (builderTriggers.get("BuildNetGun")) {
             System.out.println("Build net gun");
             buildNetGun();
             diagonalMovementCount = 0;
