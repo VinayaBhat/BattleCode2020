@@ -3,7 +3,6 @@ import battlecode.common.*;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.Map;
 
 public class Miner extends Unit {
 
@@ -72,7 +71,7 @@ public class Miner extends Unit {
         builderTriggers.put(    "BuildNetGun",              (teamSoup > 250 && netgun < 2 && myLocation.x > 10 && myLocation.x < mapheight - 10 && myLocation.y > 10 && myLocation.y < mapwidth - 10 && (buildnetgun[0] == 0 || buildnetgun[1] == 0)));
 
 
-        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
+        if (soupCarrying == RobotType.MINER.soupLimit) {
            /*
             Robot is full of soup
             */
@@ -373,6 +372,26 @@ public class Miner extends Unit {
                     break;
 
                 }
+            }
+        }
+        else {
+            Direction direction = nav.randomDirection();
+            Direction opposite = nav.oppositeDirection(direction);
+
+            if(nav.tryMove(direction)){
+
+            }
+            else if(nav.tryAltMoves(direction)){
+
+            }
+            else if(nav.tryMove(opposite)){
+
+            }
+            else if(nav.tryAltMoves(opposite)){
+
+            }
+            else{
+                System.out.println("I'm stuck :((");
             }
         }
     }
