@@ -64,7 +64,9 @@ public class Miner extends Unit {
                 System.out.println("build vap");
                 diagonalMovementCount = 0;
                 buildVaporator();
-        } else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
+            }
+        }
+        else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && rc.getTeamSoup() > 220 && rc.getSoupCarrying() > 20 && nearbySoupLocations.length > 2) {
             System.out.println("In Refinery");
             diagonalMovementCount = 0;
             buildRefinery();

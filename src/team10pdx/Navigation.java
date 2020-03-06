@@ -107,6 +107,13 @@ public class Navigation {
         } else return false;
     }
 
+    boolean tryMoveDrone(Direction dir) throws GameActionException {
+        if (rc.isReady() && rc.canMove(dir)) {
+            rc.move(dir);
+            return true;
+        } else return false;
+    }
+
     // tries to move in the general direction of dir
     boolean goTo(Direction dir) throws GameActionException {
         Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
