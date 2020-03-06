@@ -49,7 +49,8 @@ public class Miner extends Unit {
             */
             goToClosestDeposit();
             diagonalMovementCount = 0;
-        }else if(rc.senseNearbySoup().length>0 && rc.getTeamSoup()>500 && rc.getSoupCarrying()>4 && nearbySoupLocations.length>0){
+        }
+        else if(rc.senseNearbySoup().length>0 && rc.getTeamSoup()>500 && rc.getSoupCarrying()>4 && nearbySoupLocations.length>0){
             if(builder){
                 diagonalMovementCount=0;
                 buildVaporator();

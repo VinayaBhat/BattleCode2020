@@ -3,10 +3,12 @@ package team10pdx;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class DeliveryDrone extends Unit {
-    List<MapLocation> waterlc = new ArrayList<>();
+    LimitedQueue<MapLocation> waterlc = new LimitedQueue<>(10);
     MapLocation enemyHQ;
     Team enemy;
     boolean alreadycarriedow = false;
@@ -14,6 +16,24 @@ public class DeliveryDrone extends Unit {
     List<MapLocation> forbiddenloc = new ArrayList<>();
     static MapLocation nearHQ;
     boolean movetowardsenemyafterdropping = false;
+    public class LimitedQueue<E> extends LinkedList<E> {
+
+        private int limit;
+
+        public LimitedQueue(int limit) {
+            this.limit = limit;
+        }
+
+        @Override
+        public boolean add(E o) {
+            boolean added = super.add(o);
+            while (added && size() > limit) {
+                super.remove();
+            }
+            return added;
+        }
+    }
+
 
 
     public DeliveryDrone(RobotController r) {
@@ -81,19 +101,22 @@ public class DeliveryDrone extends Unit {
                     waterlc.add(rc.getLocation().add(dir));
             }
         }
+        for(MapLocation water:waterlc){
+            System.out.println("WATER  FOUND AT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! "+water);
+        }
         return waterlc;
     }
 
     public boolean canPickUpRobotandEnemyPresent(RobotInfo[] ri) throws GameActionException {
         boolean enemypresent=false;
         for (RobotInfo info : ri) {
-             if (info.getType() == RobotType.HQ && info.getTeam() == enemy && enemyHQ == null) {
+            if (info.getType() == RobotType.HQ && info.getTeam() == enemy && enemyHQ == null) {
                 System.out.println("ENEMY HQ FOUND");
                 enemyHQ = info.getLocation();
                 System.out.println("ENEMY LOCATION FOUND " + enemyHQ);
                 if(hqLoc!=null) {
                     for (int i = 0; i < 10; i++) {
-                        nav.tryMove(rc.getLocation().directionTo(hqLoc));
+                        nav.tryMoveDrone(rc.getLocation().directionTo(hqLoc));
                     }
                 }
                 int[] message = {comms.teamId, 11, enemyHQ.x, enemyHQ.y, 0, 0, 0};
@@ -132,9 +155,9 @@ public class DeliveryDrone extends Unit {
                 }
             }
             if (!forbidden) {
-                nav.tryMove(loc);
+                nav.tryMoveDrone(loc);
             } else {
-                nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+                nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             }
         }
         return forbidden;
@@ -150,7 +173,7 @@ public class DeliveryDrone extends Unit {
                     }
                 }
             } else {
-                nav.tryMove(loc);
+                nav.tryMoveDrone(loc);
             }
         }
         return cow;
@@ -158,30 +181,40 @@ public class DeliveryDrone extends Unit {
 
     public boolean isHoldingEnemyUnit() throws GameActionException {
         if (rc.isCurrentlyHoldingUnit() && !cow) {
-            if (waterlc.size() > 0) {
-                int min = Integer.MAX_VALUE;
+            for(Direction dir:Util.directions) {
+                if (rc.senseFlooding(rc.getLocation().add(dir)) && rc.onTheMap(rc.getLocation().add(dir))) {
+                    if (rc.canDropUnit(dir)) {
+                        rc.dropUnit(dir);
+                    }
+                }
+            }
+
+            if (waterlc.size() > 0 && rc.isCurrentlyHoldingUnit()) {
                 MapLocation water = waterlc.get(0);
+                int min = Integer.MAX_VALUE;
                 for (MapLocation temp : waterlc) {
                     if (rc.getLocation().distanceSquaredTo(temp) < min) {
                         min = rc.getLocation().distanceSquaredTo(temp);
                         water = temp;
                     }
                 }
-                nav.tryMove(rc.getLocation().directionTo(water));
+                nav.tryMoveDrone(rc.getLocation().directionTo(water));
                 if (rc.canSenseLocation(water)) {
+                    System.out.println("TRYING TO DROP NEAR   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        " + rc.getLocation());
                     if (rc.canDropUnit(rc.getLocation().directionTo(water))) {
                         rc.dropUnit(rc.getLocation().directionTo(water));
                         movetowardsenemyafterdropping = true;
                     }
                 }
+
             } else {
                 if (nearHQ == null) {
                     nearHQ = new MapLocation(hqLoc.x + Util.randomNumber(), hqLoc.y + Util.randomNumber());
                 }
                 System.out.println("Moving towards HQ TO DROP !!!!!!!!!!!!!!!!!!!!!!!!!");
 
-                if (!nav.tryMove(rc.getLocation().directionTo(nearHQ)))
-                    nav.tryMove(nav.randomDirection());
+                if (!nav.tryMoveDrone(rc.getLocation().directionTo(nearHQ)))
+                    nav.tryMoveDrone(nav.randomDirection());
 
                 if (rc.canSenseLocation(nearHQ)) {
                     for (Direction dir : Util.directions) {
@@ -190,11 +223,7 @@ public class DeliveryDrone extends Unit {
                     }
                 }
 
-                for (Direction dir : Util.directions) {
-                    if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.senseFlooding(rc.getLocation().add(dir))) {
-                        waterlc.add(rc.getLocation().add(dir));
-                    }
-                }
+
             }
 
         }
@@ -204,31 +233,31 @@ public class DeliveryDrone extends Unit {
     public boolean notHoldingUnit(boolean enemypresent,Direction loc) throws GameActionException {
         boolean moved=false;
         if(!rc.isCurrentlyHoldingUnit() && enemypresent) {
-            nav.tryMove(nav.randomDirection());
+            nav.tryMoveDrone(nav.randomDirection());
             moved=true;
         }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping && enemyHQ==null) {
             loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
-            nav.tryMove(loc);
+            nav.tryMoveDrone(loc);
             moved=true;
         }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping && enemyHQ!=null) {
             loc = rc.getLocation().directionTo(new MapLocation(enemyHQ.x + Util.randomNumber(), enemyHQ.y + Util.randomNumber()));
-            nav.tryMove(loc);
+            nav.tryMoveDrone(loc);
             moved = true;
         }else if(!rc.isCurrentlyHoldingUnit() && enemyHQ!=null && rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)){
-            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
-            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
-            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
-            nav.tryMove(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
+            nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             moved=true;
         }else{
             loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
-            nav.tryMove(loc);
+            nav.tryMoveDrone(loc);
             moved=true;
         }
         return moved;
     }
 
-    }
+}
 
 
 
