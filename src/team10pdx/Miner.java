@@ -22,7 +22,6 @@ public class Miner extends Unit {
     int netgun=0;
     int[] buildnetgun={0,0};
     boolean builder;
-    Dictionary<String, Boolean> builderTriggers;
     MapLocation[] nearbySoupLocations;
     MapLocation myLocation;
     int teamSoup;
@@ -35,6 +34,11 @@ public class Miner extends Unit {
     }
 
     public void takeTurn() throws GameActionException {
+        nearbySoupLocations = rc.senseNearbySoup();
+        myLocation = rc.getLocation();
+        teamSoup = rc.getTeamSoup();
+        soupCarrying = rc.getSoupCarrying();
+
         if (HQLocation == null) {
             getHQLocation();
         }
@@ -45,12 +49,6 @@ public class Miner extends Unit {
 
         closestRefineLocation = nav.findNearestLocation(rc.getLocation(), getPossibleRefineLocations());
         checkSurroundingsForKnownSoup();
-
-        nearbySoupLocations = rc.senseNearbySoup();
-        myLocation = rc.getLocation();
-        teamSoup = rc.getTeamSoup();
-        soupCarrying = rc.getSoupCarrying();
-
 
         if(builder){
             runBuilder();
@@ -73,13 +71,6 @@ public class Miner extends Unit {
             }
         }
 
-        builderTriggers.put(    "BuildVaporator",           (nearbySoupLocations.length > 0 && teamSoup > 500 && soupCarrying > 4 && nearbySoupLocations.length > 0 && canBuildVaporator));
-        builderTriggers.put(    "BuildRefinery" ,           (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && teamSoup > 220 && soupCarrying > 20 && nearbySoupLocations.length > 2));
-        builderTriggers.put(    "BuildSecondRefinery",      (nav.distanceTo(myLocation, closestRefineLocation) > 15 && refineries.size() < maxRefineries && teamSoup > 200 && soupCarrying > 20 && nearbySoupLocations.length > 2));
-        builderTriggers.put(    "BuildFulfillmentCenter",   (teamSoup > 155 && !fulfillmentCenterCreated && soupCarrying > 3));
-        builderTriggers.put(    "BuildDesignSchool",        (numDesignSchools < maxDesignSchools && teamSoup > 155 && soupCarrying > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0));
-        builderTriggers.put(    "BuildNetGun",              (teamSoup > 250 && netgun < 2 && myLocation.x > 10 && myLocation.x < mapheight - 10 && myLocation.y > 10 && myLocation.y < mapwidth - 10 && (buildnetgun[0] == 0 || buildnetgun[1] == 0)));
-
         if (soupCarrying == RobotType.MINER.soupLimit) {
            /*
             Robot is full of soup
@@ -87,32 +78,32 @@ public class Miner extends Unit {
             System.out.println("Go to closest soup");
             goToClosestDeposit();
             diagonalMovementCount = 0;
-        } else if (builderTriggers.get("BuildVaporator")) {
+        } else if (nearbySoupLocations.length > 0 && teamSoup > 500 && soupCarrying > 4 && nearbySoupLocations.length > 0 && canBuildVaporator) {
                 System.out.println("build vap");
                 diagonalMovementCount = 0;
                 buildVaporator();
         }
-        else if (builderTriggers.get("BuildRefinery")) {
+        else if (!nav.byRobot(RobotType.REFINERY) && refineries.size() < 1 && teamSoup > 220 && soupCarrying > 20 && nearbySoupLocations.length > 2) {
             System.out.println("In Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
-        } else if (builderTriggers.get("BuildSecondRefinery")) {
+        } else if (nav.distanceTo(myLocation, closestRefineLocation) > 15 && refineries.size() < maxRefineries && teamSoup > 200 && soupCarrying > 20 && nearbySoupLocations.length > 2) {
             System.out.println("Build secondary Refinery");
             diagonalMovementCount = 0;
             buildRefinery();
 
-        } else if (builderTriggers.get("BuildFulfillmentCenter")) {
+        } else if (teamSoup > 155 && !fulfillmentCenterCreated && soupCarrying > 3) {
             /*
             Build a Fulfillment Center
              */
             System.out.println("In Fulfillment");
             buildFulfillmentCenter();
             diagonalMovementCount = 0;
-        } else if (builderTriggers.get("BuildDesignSchool")) {
+        } else if (numDesignSchools < maxDesignSchools && teamSoup > 155 && soupCarrying > 5 && !nav.byRobot(RobotType.DESIGN_SCHOOL) && refineries.size() > 0) {
             System.out.println("In Design School");
             buildDesignSchool();
             diagonalMovementCount = 0;
-        } else if (builderTriggers.get("BuildNetGun")) {
+        } else if (teamSoup > 250 && netgun < 2 && myLocation.x > 10 && myLocation.x < mapheight - 10 && myLocation.y > 10 && myLocation.y < mapwidth - 10 && (buildnetgun[0] == 0 || buildnetgun[1] == 0)) {
             System.out.println("Build net gun");
             buildNetGun();
             diagonalMovementCount = 0;
