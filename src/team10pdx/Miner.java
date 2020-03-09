@@ -42,10 +42,13 @@ public class Miner extends Unit {
         if (HQLocation == null) {
             getHQLocation();
         }
+
         senseWaterNearby();
-        printSoupLocations();
-        printRefineries();
         dealWithBlockchainMessages();
+
+        //--Functions for Debugging--
+        //printSoupLocations();
+        //printRefineries();
 
         closestRefineLocation = nav.findNearestLocation(rc.getLocation(), getPossibleRefineLocations());
         checkSurroundingsForKnownSoup();
