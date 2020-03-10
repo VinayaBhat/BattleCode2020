@@ -102,7 +102,7 @@ public class Landscaper extends Unit {
         // first, save HQ by trying to remove dirt from it
         if (hqLoc != null && hqLoc.isAdjacentTo(rc.getLocation())) {
             Direction dirtohq = rc.getLocation().directionTo(hqLoc);
-            if(rc.canDigDirt(dirtohq)){
+            if(rc.canDigDirt(dirtohq) && rc.senseElevation(rc.getLocation())>0){
                 rc.digDirt(dirtohq);
             }
         }

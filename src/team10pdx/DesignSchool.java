@@ -8,7 +8,7 @@ public class DesignSchool extends Building {
     }
 
     static int totalnumLandscapers = 0;
-    static int maxLandscapers = 6;
+    static int maxLandscapers = 8;
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();

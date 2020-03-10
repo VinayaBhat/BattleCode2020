@@ -71,6 +71,9 @@ public class Miner extends Unit {
         for(RobotInfo robot : nearbyRobots){
             if(robot.getType()==RobotType.HQ || robot.getType()==RobotType.REFINERY){
                 canBuildVaporator=true;
+            }else if(robot.type==RobotType.VAPORATOR){
+                canBuildVaporator=false;
+                break;
             }
         }
 
@@ -161,7 +164,7 @@ public class Miner extends Unit {
         }
     }
 
-    private void checkSurroundingsForKnownSoup () throws GameActionException {
+    public void checkSurroundingsForKnownSoup () throws GameActionException {
         for (Direction dir : Util.directions) {
             MapLocation loc = rc.getLocation().add(dir);
             if (soupLocations.contains(loc)) {

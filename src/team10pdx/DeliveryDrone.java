@@ -16,6 +16,7 @@ public class DeliveryDrone extends Unit {
     List<MapLocation> forbiddenloc = new ArrayList<>();
     static MapLocation nearHQ;
     boolean movetowardsenemyafterdropping = false;
+    int numberofmoves=0;
     public class LimitedQueue<E> extends LinkedList<E> {
 
         private int limit;
@@ -235,24 +236,49 @@ public class DeliveryDrone extends Unit {
         if(!rc.isCurrentlyHoldingUnit() && enemypresent) {
             nav.tryMoveDrone(nav.randomDirection());
             moved=true;
+            numberofmoves=0;
         }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping && enemyHQ==null) {
             loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
             nav.tryMoveDrone(loc);
             moved=true;
+            numberofmoves=0;
         }else if (!rc.isCurrentlyHoldingUnit() && movetowardsenemyafterdropping && enemyHQ!=null) {
             loc = rc.getLocation().directionTo(new MapLocation(enemyHQ.x + Util.randomNumber(), enemyHQ.y + Util.randomNumber()));
             nav.tryMoveDrone(loc);
             moved = true;
+            numberofmoves=0;
         }else if(!rc.isCurrentlyHoldingUnit() && enemyHQ!=null && rc.getLocation().isWithinDistanceSquared(enemyHQ,GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)){
             nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             nav.tryMoveDrone(nav.oppositeDirection(rc.getLocation().directionTo(enemyHQ)));
             moved=true;
+            numberofmoves=0;
         }else{
-            loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
-            nav.tryMoveDrone(loc);
-            moved=true;
+            if(numberofmoves<30) {
+                if(enemyHQ==null) {
+                    loc = rc.getLocation().directionTo(new MapLocation(mapheight - hqLoc.x + Util.randomNumber(), mapwidth - hqLoc.y + Util.randomNumber()));
+                    if(!nav.tryMoveDrone(loc)){
+                        numberofmoves++;
+                    }
+                    moved = true;
+                }else{
+                    int min=rc.getLocation().distanceSquaredTo(forbiddenloc.get(0));
+                    loc=rc.getLocation().directionTo(new MapLocation(forbiddenloc.get(0).x,forbiddenloc.get(0).y));
+                    for(int i=1;i<4;i++){
+                        if(min>rc.getLocation().distanceSquaredTo(forbiddenloc.get(i))){
+                             min=rc.getLocation().distanceSquaredTo(forbiddenloc.get(i));
+                            loc=rc.getLocation().directionTo(new MapLocation(forbiddenloc.get(i).x,forbiddenloc.get(i).y));
+                        }
+                    }
+                    if(!nav.tryMoveDrone(loc)){
+                        numberofmoves++;
+                    }
+                    moved=true;
+                }
+            }else{
+                nav.tryMoveDrone(nav.randomDirection());
+            }
         }
         return moved;
     }
