@@ -23,7 +23,6 @@ public class HQ extends Shooter {
     int refineryBroadcasts = 0;
     ArrayList<MapLocation> refineries = new ArrayList<>();
     ArrayList<Integer> mainLandscapers = new ArrayList<>();
-    ArrayList<Integer> secondaryLandscapers = new ArrayList<>();
 
     Queue<MessageWaiting> q = new LinkedList<>();
 
@@ -67,6 +66,7 @@ public class HQ extends Shooter {
             createMiner();
         }
     }
+
 
     public boolean createMiner() throws GameActionException {
         boolean minerPlaced = false;
@@ -154,39 +154,6 @@ public class HQ extends Shooter {
                         System.out.println("Landscaper Message");
                         for(int i=0; i<message.length; i++){
                             System.out.println(" "+message[i]);
-                        }
-                        if(mainLandscapers.size()<4){
-                            //add to the main landscapers
-                            System.out.println("adding main");
-                            mainLandscapers.add(message[4]);
-                            //transmit its role
-                            //make sure you have enough soup
-                            if(rc.getTeamSoup()>5){
-                                comms.broadcastLandscaperRole(0);
-                            }
-                            else{
-                                //add to the Queue if not enough soup
-                                System.out.println("adding to Q");
-                                int[] roleMessage = {comms.teamId, 7, message[4], 0, 0, 0, 0};
-                                MessageWaiting messageWaiting = new MessageWaiting(roleMessage, 3);
-                                q.add(messageWaiting);
-                            }
-                        }
-                        else{
-                            System.out.println("adding second");
-                            secondaryLandscapers.add(message[4]);
-                            //transmit its role
-                            int[] roleMessage = {comms.teamId, 7, message[4], 1, 0, 0, 0};
-                            //make sure you have enough soup
-                            if(rc.getTeamSoup()>5){
-                                comms.broadcastLandscaperRole(1);
-                            }
-                            else{
-                                //add to the Queue if not enough soup
-                                System.out.println("adding to Q");
-                                MessageWaiting messageWaiting = new MessageWaiting(roleMessage, 3);
-                                q.add(messageWaiting);
-                            }
                         }
                         break;
                 }
